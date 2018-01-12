@@ -1,0 +1,11 @@
+{
+  "name": "plant-saturation",
+  "version": "0.0.1",
+  "description": "Shows the hydration level of the soil.",
+  "main": "app.js",
+  "scripts": {
+    "test": "node app.js"
+  },
+  "author": "malyon",
+  "license": "MIT"
+}

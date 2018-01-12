@@ -1,0 +1,15 @@
+{
+  "name": "plant_saturation_interface",
+  "version": "1.0.0",
+  "description": "Reads in SerialPort data from hygrometer and sends post request to send sensor data",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "malyon",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.83.0",
+    "serialport": "^6.0.4"
+  }
+}
