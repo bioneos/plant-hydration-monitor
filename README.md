@@ -15,7 +15,7 @@ This Node application, located in ./plant-hydration-interface, reads in the seri
 The web application portion, located in ./web-app is a very simple application at this point.  It stores one value that is posted to the correct url from the interfacing layer and displays that to the web page.  Obviously this setup will only work for one sensor.
 
 
-### Future Roadmap
+## Future Roadmap
 1. Get rid of the interfacing layer altogether and have the sensor hooked up to an ESP8266 module or some variety and have it post the value directly to to the web application without having to be hooked up to a computer through a serial data connection.
 2. Build a more robust web application that can support more than one sensor.
 3. Build a more in depth web application that stores values in database with more information than just the current saturation level but also maybe the last time the plant was watered, a line graph of the water level instead of just a single value, battery levels of the sensor, etc.
