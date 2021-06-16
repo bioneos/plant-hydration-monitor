@@ -17,7 +17,12 @@ The web application portion, located in ./web-app is a very simple application a
 
 ## Future Roadmap
 1. Get rid of the interfacing layer altogether and have the sensor hooked up to an ESP8266 module or some variety and have it post the value directly to to the web application without having to be hooked up to a computer through a serial data connection.
+   * Potential sensors:
+   * https://www.sparkfun.com/products/17146
+   * https://www.sparkfun.com/products/13322
+
 2. Build a more robust web application that can support more than one sensor.
 3. Build a more in depth web application that stores values in database with more information than just the current saturation level but also maybe the last time the plant was watered, a line graph of the water level instead of just a single value, battery levels of the sensor, etc.
 4. Implement better security for the IoT setup.
 5. Have the plants get watered automatically with solenoid valves and pumps?
+
