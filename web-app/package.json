@@ -7,5 +7,14 @@
     "test": "node app.js"
   },
   "author": "malyon",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.5",
+    "express": "^4.17.1",
+    "glob": "^7.1.7",
+    "method-override": "^3.0.0",
+    "morgan": "^1.10.0",
+    "serve-favicon": "^2.5.0"
+  }
 }
