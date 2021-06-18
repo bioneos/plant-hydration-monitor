@@ -1,7 +1,7 @@
-var express = require('express'),
+const express = require('express'),
   router = express.Router();
 
-var saturation = 1023;
+let saturation = 1023;
 module.exports = function (app) {
   app.use('/saturation', router);
 };
@@ -11,13 +11,11 @@ module.exports = function (app) {
  * Render the main page
  */
 router.get('/', function(req, res, next) {
-  // Just serve up our create UI
-  res.send(saturation.toString());
+  res.json({ value: saturation });
 }) ;
 
 router.post('/', function(req, res, next) {
-  // Just serve up our create UI
   saturation = req.body.sensorVal;
   console.log('Saturation Value: ', saturation);
-  res.send('SUCCESS');
+  res.json({ message: 'SUCCESS'});
 }) ;
