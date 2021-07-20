@@ -17,8 +17,8 @@ The web application portion, located in ./web-app is a very simple application a
 
 ## Future Roadmap
 1. Get rid of the interfacing layer altogether and have the sensor hooked up to an ESP8266 module or some variety and have it post the value directly to to the web application without having to be hooked up to a computer through a serial data connection.
-   * Potential sensors:
-   * https://www.sparkfun.com/products/17146
+   * Potential hardware:
+   * https://electropeak.com/nodemcu-lua-esp8266-wifi-internet-development-board (NodeMCU based) / https://www.sparkfun.com/products/17146 (Might not work without supporting board for control)
    * https://www.sparkfun.com/products/13322
 
 2. Build a more robust web application that can support more than one sensor.
