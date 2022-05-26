@@ -14,6 +14,9 @@ This Node application, located in ./plant-hydration-interface, reads in the seri
 ## Web Application
 The web application portion, located in ./web-app is a very simple application at this point.  It stores one value that is posted to the correct url from the interfacing layer and displays that to the web page.  Obviously this setup will only work for one sensor.
 
+## Testing the module
+Testing the ESP8266 modules from hiletgo can be done through the serial monitor (BEFORE you flash them) using these instructions:
+https://www.instructables.com/Get-Started-with-ESP8266-Using-AT-Commands-NodeMCU/
 
 ## Future Roadmap
 1. Get rid of the interfacing layer altogether and have the sensor hooked up to an ESP8266 module or some variety and have it post the value directly to to the web application without having to be hooked up to a computer through a serial data connection.
