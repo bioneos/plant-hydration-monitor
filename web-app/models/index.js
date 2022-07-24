@@ -34,15 +34,4 @@ Object.keys(db).forEach(modelName => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-db.Plant.hasMany(db.Moisture, {
-  foreignKey: 'plantId',
-  as: "moisture",
-  onDelete: 'cascade',
-  hooks: true,
-});
-db.Moisture.belongsTo(db.Plant, {
-  foreignKey: "plantId",
-  as: "plant",
-});
-
 module.exports = db;
