@@ -1,15 +1,8 @@
-const Sequelize = require("sequelize");
-
-const sequelize = new Sequelize({
-  dialect: "sqlite",
-  storage: '../../../database/plant.db'
-});
-
-module.exports = sequelize;
-var express = require('express'),
+const express = require('express'),
+  models = require('./app/models'),
   config = require('./config/config');
 
-var app = express();
+let app = express();
 
 require('./config/express')(app, config);
 

@@ -5,7 +5,7 @@ const path = require('path');
 const Sequelize = require('sequelize');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.js')[env];
+const config = require(path.join(__dirname, '/../../config/config'));
 const db = {};
 
 let sequelize;
@@ -33,5 +33,8 @@ Object.keys(db).forEach(modelName => {
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
+
+//Sync Database
+sequelize.sync({ force: false }).then(() => console.log('db is ready'));
 
 module.exports = db;
