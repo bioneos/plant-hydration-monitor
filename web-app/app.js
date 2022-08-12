@@ -1,7 +1,8 @@
-var express = require('express'),
+const express = require('express'),
+  models = require('./app/models'),
   config = require('./config/config');
 
-var app = express();
+let app = express();
 
 require('./config/express')(app, config);
 
