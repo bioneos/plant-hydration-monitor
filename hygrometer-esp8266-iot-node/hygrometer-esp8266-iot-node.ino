@@ -1,9 +1,11 @@
 #include <ESP8266WiFi.h>
 
 // NOTE: Change these values to the WiFi values for your personal WiFi
-const char SSID[] =  "SSID"; // Your current WiFi network SSID (can be hidden)
-const char PASS[] =  "PASS"; // Your current WiFi network password
+const char SSID[] =  "12AshCt"; // Your current WiFi network SSID (can be hidden)
+const char PASS[] =  "3196215249"; // Your current WiFi network password
 const char *SERVER = "192.168.0.0"; // Your IP address on the WiFi network
+const int SERVER_PORT = 3000;
+const int SLEEP_MS = 5 * 60e6;
 
 // Main loop process:
 //   1) Wake from sleep
@@ -22,7 +24,7 @@ void setup()
   Serial.begin(115200);
   delay(10);
 
-  Serial.println("Connecting to ");
+  Serial.print("\n\nConnecting to: ");
   Serial.println(SSID);
 
   int status = WL_IDLE_STATUS;
@@ -44,6 +46,7 @@ void setup()
 
 void loop()
 {
+  Serial.println("Starting soil moisture measurement...");
   // Read 10 values from the sensor, 1 second apart 
   int totSum = 0;
   for (int k = 0; k < NUM_READS; k++){
@@ -56,9 +59,12 @@ void loop()
   //   what we are doing here (or why). At a minimum we should get rid of the magic
   //   numbers so we can change the number of reads
   int moisture = ((totSum / NUM_READS) / 900) * 100; 
+  Serial.println("Done: " + String(moisture));
 
   // Open a basic HTTP connection to the server
-  if (client.connect(SERVER, 3000))  
+  Serial.println("Attempted to report moisture value of '" + String(moisture) + "' to server at: ");
+  Serial.println("  " + String(SERVER) + ":" + String(SERVER_PORT));
+  if (client.connect(SERVER, SERVER_PORT))  
   {
     // Create our POST request message Body content
     String postStr = "sensorVal=";
@@ -73,16 +79,19 @@ void loop()
     client.print(postStr.length());
     client.print("\n\n");
     client.print(postStr);
+
+    // Close our HTTP connection
+    client.stop();
+    Serial.println("Hooray! The request was sucessfully processed!");
   }
-  // Close our HTTP connection
-  client.stop();
-  Serial.println("Hooray! The request was sucessfully processed!");
+  else
+  {
+    Serial.println("The request could not be processed or timed out.");  
+  }
   
-  // Wait for an additional 50 seconds before repeating them easurement 
+  // Wait in Deep Sleep before repeating the measurement (to save battery)
+  // SEE ALSO: https://randomnerdtutorials.com/esp8266-deep-sleep-with-arduino-ide/
   // NOTE: disable this delay to enable the module to send sensor values every 10 seconds
-  // TODO: We will want to ensure we can get the device into its deepest level of sleep
-  //   which will shut off WiFi. We will need to review the implications of this and 
-  //   how to best handle it to ensure power usage maximization.
-  // https://randomnerdtutorials.com/esp8266-deep-sleep-with-arduino-ide/
-  delay(WAIT_DELAY_MS);
+  Serial.println("Dropping to Deep Sleep...");  
+  ESP.deepSleep(SLEEP_MS); 
 }
