@@ -71,13 +71,12 @@ void loop()
     postStr += String(moisture);
 
     // Send our POST request
-    client.print("POST /saturation HTTP/1.1\n");
-    client.print("Host: localhost\n");
-    client.print("Connection: close\n");
-    client.print("Content-Type: application/x-www-form-urlencoded\n");
-    client.print("Content-Length: ");
-    client.print(postStr.length());
-    client.print("\n\n");
+    client.print("POST /saturation HTTP/1.1\r\n");
+    client.print("Host: localhost\r\n");
+    client.print("Connection: close\r\n");
+    client.print("Content-Type: application/x-www-form-urlencoded\r\n");
+    client.print("Content-Length: " + String(postStr.length()) + "\r\n");
+    client.print("\r\n");
     client.print(postStr);
 
     // Close our HTTP connection
