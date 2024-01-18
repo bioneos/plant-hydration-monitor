@@ -31,7 +31,6 @@ router.post('/', async function(req, res, next) {
   await moisture.save();
 
   const newVals = await plant.getMoisture();
-  console.log(newVals);
   for (let n = 0; n < newVals.length; n++)
   {
     console.log(`${n}: ${newVals[n].moisture} from ${newVals[n].createdAt}`);
