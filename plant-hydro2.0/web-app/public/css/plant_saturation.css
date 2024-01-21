@@ -1,0 +1,66 @@
+/* Pie Chart */
+.progress-pie-chart {
+width:200px;
+height: 200px;
+border-radius: 50%;
+background-color: #552200;
+position: relative;
+}
+.progress-pie-chart.gt-50 {
+background-color: #001dff;
+}
+
+.ppc-progress {
+content: "";
+position: absolute;
+border-radius: 50%;
+left: calc(50% - 100px);
+top: calc(50% - 100px);
+width: 200px;
+height: 200px;
+clip: rect(0, 200px, 200px, 100px);
+}
+.ppc-progress .ppc-progress-fill {
+content: "";
+position: absolute;
+border-radius: 50%;
+left: calc(50% - 100px);
+top: calc(50% - 100px);
+width: 200px;
+height: 200px;
+clip: rect(0, 100px, 200px, 0);
+background: #001dff;
+transform: rotate(60deg);
+}
+.gt-50 .ppc-progress {
+clip: rect(0, 100px, 200px, 0);
+}
+.gt-50 .ppc-progress .ppc-progress-fill {
+clip: rect(0, 200px, 200px, 100px);
+background: #552200;
+}
+
+.ppc-percents {
+content: "";
+position: absolute;
+border-radius: 50%;
+left: calc(50% - 173.91304px/2);
+top: calc(50% - 173.91304px/2);
+max-width: 173.91304px;
+max-height: 173.91304px;
+background: #4d5e0b;
+text-align: center;
+display: table;
+border: #552200;
+}
+
+.pcc-percents-wrapper {
+  max-height:173.91304px;
+  max-width:173.91304px;
+  vertical-align: middle;
+  text-align:center;
+}
+
+.progress-pie-chart {
+margin: 50px auto 0;
+}
