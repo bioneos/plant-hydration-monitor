@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="css/plant_saturation.css">
+  </head>
+  <body>
+    <h1>Bio::Neos Plant Monitor</h1>
+    <div class="bar_container" height="100%" width="100%" style="background: #552200;">
+      <div id="main_container">
+        <div id="pbar" class="progress-pie-chart" data-percent="0">
+          <div class="ppc-progress">
+            <div class="ppc-progress-fill"></div>
+          </div>
+          <div class="ppc-percents">
+            <div class="pcc-percents-wrapper">
+              <img src="img/transparent_leaves_1.png" height="174.91304px" width="174.91304px">
+            </div>
+          </div>
+        </div>
+
+        <progress style="display: none" id="progress_bar" value="0" max="100"></progress>
+      </div>
+    </div>
+    <script src="js/jquery-3.1.1.min.js"></script>
+    <script src="js/rainbowvis.js"></script>
+    <script src="js/plant_saturation.js"></script>
+  </body>
+</html>

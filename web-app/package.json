@@ -1,0 +1,25 @@
+{
+  "name": "plant-saturation",
+  "version": "0.0.1",
+  "description": "Shows the hydration level of the soil.",
+  "main": "app.js",
+  "scripts": {
+    "test": "node app.js"
+  },
+  "author": "malyon",
+  "license": "MIT",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.5",
+    "express": "^4.17.1",
+    "glob": "^7.1.7",
+    "method-override": "^3.0.0",
+    "morgan": "^1.10.0",
+    "sequelize": "^6.21.3",
+    "serve-favicon": "^2.5.0",
+    "sqlite3": "^5.0.9"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.4.1"
+  }
+}

@@ -1,0 +1,3 @@
+.DS_Store
+web-app/node_modules
+web-app/database/*
