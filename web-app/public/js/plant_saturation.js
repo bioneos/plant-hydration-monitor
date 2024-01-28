@@ -7,8 +7,9 @@ $(document).ready(function() {
   var loading = function() {
     $.get( '/saturation', function(data) {
       console.log(data);
-      value = data;
+      value = data.value;
       var decimal = (1023-value)/1023;
+      // var decimal = value / 1023;
       var percent = decimal * 100;
       progressbar.val(percent);
 
