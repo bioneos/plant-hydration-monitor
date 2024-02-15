@@ -1,4 +1,5 @@
 const express = require('express'),
+  path = require('path'),
   glob = require('glob'),
   favicon = require('serve-favicon'),
   logger = require('morgan'),
@@ -12,7 +13,7 @@ module.exports = function(app, config) {
   app.locals.ENV = env;
   app.locals.ENV_DEVELOPMENT = env == 'development';
 
-  // app.use(favicon(config.root + '/public/img/favicon.ico'));
+  // app.use(favicon(path.join(config.root, 'public', 'img', 'favicon.ico')));
   app.use(logger('dev'));
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({
@@ -20,10 +21,10 @@ module.exports = function(app, config) {
   }));
   app.use(cookieParser());
   app.use(compress());
-  app.use(express.static(config.root + '/public'));
+  app.use(express.static(path.join(config.root, 'public')));
   app.use(methodOverride());
 
-  let controllers = glob.sync(config.root + '/app/controllers/*.js');
+  let controllers = glob.sync(path.join(config.root, 'app', 'controllers', '*.js'));
   controllers.forEach(function (controller) {
     require(controller)(app);
   });
