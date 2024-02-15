@@ -1,5 +1,5 @@
 const path = require('path'),
-    rootPath = path.normalize(__dirname + '/..'),
+    rootPath = path.normalize(path.join(__dirname, '..')),
     env = process.env.NODE_ENV || 'development';
 
 let config = {
@@ -7,7 +7,7 @@ let config = {
     use_env_variable: false,
     root: rootPath,
     dialect: 'sqlite',
-    storage: 'database/plant.db',
+    storage: path.join('database', 'plant.db'),
     app: {
       name: 'plant-hydration-monitor'
     },
@@ -18,7 +18,7 @@ let config = {
     use_env_variable: false,
     root: rootPath,
     dialect: 'sqlite',
-    storage: "database/plant.db",
+    storage: path.join('database', 'plant.db'),
     app: {
       name: 'plant-hydration-monitor'
     },
@@ -29,7 +29,7 @@ let config = {
     use_env_variable: false,
     root: rootPath,
     dialect: 'sqlite',
-    storage: "database/plant.db",
+    storage: path.join('database', 'plant.db'),
     app: {
       name: 'plant-hydration-monitor'
     },
