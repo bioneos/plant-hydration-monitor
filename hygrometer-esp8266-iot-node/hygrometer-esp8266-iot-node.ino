@@ -15,7 +15,8 @@ const int NUM_READS = 10;
 const int READ_DELAY_MS = 100;
 // 5 minutes:
 //const int SLEEP_US = 5 * 60 * 1000000;
-const int SLEEP_US = 5 * 1000000;
+// 15 seconds (useful when troubleshooting / in development):
+const int SLEEP_US = 15 * 1000000;
 
 WiFiClient client;
 void setup()
@@ -27,16 +28,28 @@ void setup()
 
   Serial.print("\n\nConnecting to: ");
   Serial.println(SSID);
+  // Turn this on for lots more debug output from the ESP8266 library (noisy)
+  //Serial.setDebugOutput(true);
 
   int status = WL_IDLE_STATUS;
 
-  // Connect to WiFi, checking status every 5 seconds
-  // TODO: This can be improved to be more asynchronous
+  // Connect to WiFi, checking status every .5 seconds
+  // TODO: This can be improved to be more robust & informative
+  //   For example: https://forum.arduino.cc/t/nodemcu-esp8266-and-wifi-problem/1104469/4
+  int count = 0;
+  WiFi.mode(WIFI_STA);
+  status = WiFi.begin(SSID, PASS);
   while (status != WL_CONNECTED)
   {
+    status = WiFi.status();
     Serial.print(".");
-    status = WiFi.begin(SSID, PASS);
-    delay(5000);
+    delay(500);
+    count++;
+    if (count % 20 == 0) 
+    {
+      Serial.println("\n\nTrouble connecting. Current Diagnostics:");
+      WiFi.printDiag(Serial);
+    }
   }
   Serial.println("");
   Serial.println("WiFi connected");
