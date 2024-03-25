@@ -1,4 +1,5 @@
 #include <ESP8266WiFi.h>
+#include <EEPROM.h>
 #define ONBOARD_LED 2
 
 // NOTE: Change these values to the WiFi values for your personal WiFi
@@ -20,12 +21,27 @@ const int READ_DELAY_MS = 100;
 const int SLEEP_US = 15 * 1000000;
 WiFiClient client;
 
+/** Custom struct for our configuration settings **/
+struct ModuleConfig
+{
+  char ssid[32];
+  char pass[64];
+  int server[4];
+  int port;
+};
+
 /**
  * Check for WiFi configuration values in the EEPROM.
  */
 bool availableConnectionInfo()
 {
-  // TODO
+  ModuleConfig config;
+  EEPROM.get(0, config);
+  // TEMP
+  Serial.println("Read from EEPROM:\n");
+  Serial.printf("SSID '%s', PASS '%s', SERVER %i.%i.%i.%i, PORT %i\n\n", config.ssid, config.pass, config.server[0], config.server[1], config.server[2], config.server[3], config.port);
+  // end TEMP
+
   return false;
 }
 
@@ -92,7 +108,7 @@ bool saveConfigData(int length)
   }
   else
   {
-    // Check each setting for the proper prefix
+    // Parse into separate strings
     char ssid[stop1 + 1], pass[stop2 - stop1 + 1], server[stop3 - stop2 + 1];
     for (int i = 0; i < length; i++)
     {
@@ -100,7 +116,16 @@ bool saveConfigData(int length)
       else if (i > stop1 && i <= stop2) pass[i - stop1 - 1] = incoming[i];
       else if (i > stop2) server[i - stop2 - 1] = incoming[i];
     }
-    Serial.printf("SSID: %s and PASS: %s and SERVER: %s", ssid, pass, server);
+    // TEMP
+    Serial.printf("SSID: %s and PASS: %s and SERVER: %s\n", ssid, pass, server);
+    // end TEMP
+
+    // Check each setting for the proper prefix
+    if (!((String) ssid).startsWith("SSID:") || !((String) pass).startsWith("PASS:") || !((String) server).startsWith("SERVER:")) return false;
+
+    // Save our configuration
+    Serial.println("Would save config NOW");
+    // TODO
     return true;
   }
 }
