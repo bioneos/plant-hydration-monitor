@@ -1,4 +1,5 @@
 #include <ESP8266WiFi.h>
+#define ONBOARD_LED 2
 
 // NOTE: Change these values to the WiFi values for your personal WiFi
 const char SSID[] =  "SSID"; // Your current WiFi network SSID (can be hidden)
@@ -17,14 +18,146 @@ const int READ_DELAY_MS = 100;
 //const int SLEEP_US = 5 * 60 * 1000000;
 // 15 seconds (useful when troubleshooting / in development):
 const int SLEEP_US = 15 * 1000000;
-
 WiFiClient client;
+
+/**
+ * Check for WiFi configuration values in the EEPROM.
+ */
+bool availableConnectionInfo()
+{
+  // TODO
+  return false;
+}
+
+/** 
+ * Parse a configuration string from the Serial interface, or return
+ * false if the proper format was not used. In the case of a failure,
+ * a repeated command will succeed if the format is corrected.
+ *
+ * This function expects that the Serial interface will receive a
+ * command with the following format:
+ *    "SSID:<name_of_ssid>\0PASS:<WPA2_or_3_password>\0SERVER:<IP_address_of_web_app>\n"
+ *
+ * NOTE: Because of the challenge of sending a null character ('\0') 
+ * with the Arduino IDE -- there is a workaround where you can uncomment
+ * the "specialDelimiter" line in the function to allow it to accept a 
+ * second delimiter instead of the '\0' char. This allows you to manually
+ * send a configuration to the device without disconnecting the Serial
+ * Monitor in the IDE. However, most ASCII printable characters (those
+ * supported by the IDE Serial Monitor) are valid SSID and WPA2/3 characters
+ * as well and might interfere with your current local configuration. In
+ * the case of a conflict, just be sure to change the "specialDelimiter" to
+ * a character that isn't used by your SSID or WPA2/3 password.
+ */
+bool saveConfigData(int length)
+{
+  // Grab all available data up to the newline
+  char incoming[length];
+  for (int i = 0; i < length; i++)
+  {
+    // Accumulate 1 byte at a time
+    incoming[i] = Serial.read();
+  }
+  incoming[length - 1] = '\0';
+
+  // TEMP
+  Serial.printf("Received (%i) bytes: ", length);
+  Serial.println(incoming);
+  // end TEMP
+
+  // Attempt to parse the config string by the delimiters
+  // TODO: Improve with strtok() ?
+  char delimiter = '\0', specialDelimiter = '\0';
+  // Uncomment to make it easier to use Serial Monitor
+  specialDelimiter = '|'; 
+  int stop1 = 0, stop2 = 0, stop3 = length;
+  for (int pos = 0; pos < length; pos++)
+  {
+    if (stop1 == 0 && (incoming[pos] == delimiter || incoming[pos] == specialDelimiter))
+    {
+      stop1 = pos;
+      incoming[pos] = '\0';
+    }
+    else if (stop2 == 0 && (incoming[pos] == delimiter || incoming[pos] == specialDelimiter))
+    {
+      stop2 = pos;
+      incoming[pos] = '\0';
+    }
+  }
+  incoming[length - 1] = '\0';
+
+  if (stop1 == 0 || stop2 == 0 || stop3 == 0)
+  {
+    return false;
+  }
+  else
+  {
+    // Check each setting for the proper prefix
+    char ssid[stop1 + 1], pass[stop2 - stop1 + 1], server[stop3 - stop2 + 1];
+    for (int i = 0; i < length; i++)
+    {
+      if (i <= stop1) ssid[i] = incoming[i];
+      else if (i > stop1 && i <= stop2) pass[i - stop1 - 1] = incoming[i];
+      else if (i > stop2) server[i - stop2 - 1] = incoming[i];
+    }
+    Serial.printf("SSID: %s and PASS: %s and SERVER: %s", ssid, pass, server);
+    return true;
+  }
+}
+
+/**
+ * Slow poll (3s) the Serial interface until a configuration is supplied.
+ * Announce that we are awaiting a config on the serial interface every 
+ * 1 minute, while blinking the onboard LED every 3 seconds;
+ */
+void awaitConfigFromSerial()
+{
+  bool configured = false;
+  int count = 0;
+  while (!configured)
+  {
+    if (count % 20 == 0) Serial.println("Awaiting configuration...");
+    digitalWrite(ONBOARD_LED, LOW);
+    delay(500);
+    digitalWrite(ONBOARD_LED, HIGH);
+    delay(2500);
+
+    // Check for activity on the serial interface
+    int available = Serial.available();
+    if (available > 0)
+    {
+      // Parse and Save data for our configuration (might fail)
+      if (saveConfigData(available) == false)
+      {
+        Serial.println("Could not parse configuration string... Ignoring.");
+        configured = false;
+      }
+      else
+      {
+        configured = true;
+      }
+    }
+    count++;
+  }
+}
+
+/**
+ * Initialization for module after first power-on.
+ */
 void setup()
 {
   // Turn on serial communication for logging
   // TODO: when in production mode we will want to disable serial output to save energy
   Serial.begin(115200);
   delay(10);
+
+  // Onboard LED indicator for monitoring
+  pinMode(ONBOARD_LED, OUTPUT);
+
+  if (!availableConnectionInfo())
+  {
+    awaitConfigFromSerial();
+  }
 
   Serial.print("\n\nConnecting to: ");
   Serial.println(SSID);
@@ -34,8 +167,7 @@ void setup()
   int status = WL_IDLE_STATUS;
 
   // Connect to WiFi, checking status every .5 seconds
-  // TODO: This can be improved to be more robust & informative
-  //   For example: https://forum.arduino.cc/t/nodemcu-esp8266-and-wifi-problem/1104469/4
+  // Feedback via LED (needs documentation)
   int count = 0;
   WiFi.mode(WIFI_STA);
   status = WiFi.begin(SSID, PASS);
@@ -43,12 +175,26 @@ void setup()
   {
     status = WiFi.status();
     Serial.print(".");
-    delay(500);
+    digitalWrite(ONBOARD_LED, LOW);
+    delay(100);
+    digitalWrite(ONBOARD_LED, HIGH);
+    delay(400);
     count++;
+
+    // Every 10 seconds, report trouble connecting
     if (count % 20 == 0) 
     {
       Serial.println("\n\nTrouble connecting. Current Diagnostics:");
       WiFi.printDiag(Serial);
+
+      // Rapidly flash the LED 5 times when unable to connect
+      for (int i = 0; i < 5; i++) 
+      {
+        digitalWrite(ONBOARD_LED, LOW);  // On
+        delay(100);
+        digitalWrite(ONBOARD_LED, HIGH); // Off
+        delay(100);
+      }
     }
   }
   Serial.println("");
@@ -60,7 +206,9 @@ void setup()
 
 void loop()
 {
+  // Start our read process and turn on the LED
   Serial.println("Starting soil moisture measurement...");
+  digitalWrite(ONBOARD_LED, LOW);
   // Read 10 values from the sensor, 1 second apart 
   int totSum = 0;
   for (int k = 0; k < NUM_READS; k++){
@@ -96,11 +244,29 @@ void loop()
     // Close our HTTP connection
     client.stop();
     Serial.println("Hooray! The request was sucessfully processed!");
+
+    // Rapid flash of the Onboard LED
+    digitalWrite(ONBOARD_LED, HIGH); // Off
+    delay(100);
+    digitalWrite(ONBOARD_LED, LOW);  // On
+    delay(100);
   }
   else
   {
-    Serial.println("The request could not be processed or timed out.");  
+    // Something went wrong
+    Serial.println("The request could not be processed or timed out.");
+
+    // Rapidly flash the LED 3 times when an error occurs
+    for (int i = 0; i < 3; i++) 
+    {
+      digitalWrite(ONBOARD_LED, HIGH); // Off
+      delay(100);
+      digitalWrite(ONBOARD_LED, LOW); // On
+      delay(100);
+    }
   }
+  // Turn off the LED
+  digitalWrite(ONBOARD_LED, HIGH);
   
   // Wait in Deep Sleep before repeating the measurement (to save battery)
   // SEE ALSO: https://randomnerdtutorials.com/esp8266-deep-sleep-with-arduino-ide/
