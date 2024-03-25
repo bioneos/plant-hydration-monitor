@@ -159,8 +159,7 @@ void setup()
     awaitConfigFromSerial();
   }
 
-  Serial.print("\n\nConnecting to: ");
-  Serial.println(SSID);
+  Serial.printf("\n\nConnecting to: %s\n", SSID);
   // Turn this on for lots more debug output from the ESP8266 library (noisy)
   //Serial.setDebugOutput(true);
 
@@ -197,8 +196,7 @@ void setup()
       }
     }
   }
-  Serial.println("");
-  Serial.println("WiFi connected");
+  Serial.println("\nWiFi connected");
 
   // Setup the A0 pin to read the sensor analog value using ADC
   pinMode(A0, INPUT);
@@ -221,11 +219,10 @@ void loop()
   //   what we are doing here (or why). At a minimum we should get rid of the magic
   //   numbers so we can change the number of reads
   int moisture = ((totSum / NUM_READS) / 900) * 100; 
-  Serial.println("Done: " + String(moisture));
+  Serial.printf("Done: %i\n", moisture);
 
   // Open a basic HTTP connection to the server
-  Serial.println("Attempted to report moisture value of '" + String(moisture) + "' to server at: ");
-  Serial.println("  " + String(SERVER) + ":" + String(SERVER_PORT));
+  Serial.printf("Attempted to report moisture value of '%i' to server at: %s:%i\n", moisture, SERVER, SERVER_PORT);
   if (client.connect(SERVER, SERVER_PORT))  
   {
     // Create our POST request message Body content
@@ -272,6 +269,6 @@ void loop()
   // SEE ALSO: https://randomnerdtutorials.com/esp8266-deep-sleep-with-arduino-ide/
   // NOTE: Be sure to physically connect GPIO16 to RST or the device will not be
   //   able to wake itself up.
-  Serial.println("Dropping to Deep Sleep for " + String(SLEEP_US) + " microseconds...");  
+  Serial.printf("Dropping to Deep Sleep for %i microseconds...\n", SLEEP_US);  
   ESP.deepSleep(SLEEP_US); 
 }
