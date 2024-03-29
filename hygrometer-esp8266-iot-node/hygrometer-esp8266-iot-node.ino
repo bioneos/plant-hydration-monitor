@@ -31,6 +31,19 @@ struct ModuleConfig
 };
 
 /**
+ * Validate an int array as an IP address.
+ */
+bool validIP(int data[])
+{
+  if (sizeof(data)/sizeof(int) != 4) return false;
+
+  for (int i = 0; i < 4; i++) if (data[i] < 0 || data[i] > 255) return false;
+
+  return true;
+}
+
+
+/**
  * Check for WiFi configuration values in the EEPROM.
  */
 bool availableConnectionInfo()
@@ -39,10 +52,15 @@ bool availableConnectionInfo()
   EEPROM.get(0, config);
   // TEMP
   Serial.println("Read from EEPROM:\n");
-  Serial.printf("SSID '%s', PASS '%s', SERVER %i.%i.%i.%i, PORT %i\n\n", config.ssid, config.pass, config.server[0], config.server[1], config.server[2], config.server[3], config.port);
+  Serial.printf("SSID(%i) '%s', PASS(%i) '%s', SERVER %i.%i.%i.%i, PORT %i\n\n", config.ssid, strlen(config.ssid), config.pass, ((String) config.pass).length(),
+    config.server[0], config.server[1], config.server[2], config.server[3], config.port);
   // end TEMP
 
-  return false;
+  // Validate what we can:
+  if (strlen(config.ssid) < 2 || strlen(config.pass) < 8 || !validIP(config.server) || config.port <= 0 || config.port > 65535)
+    return false;
+  else
+    return true;
 }
 
 /** 
