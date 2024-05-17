@@ -24,8 +24,9 @@ module.exports = function(app, config) {
   app.use(express.static(path.join(config.root, 'public')));
   app.use(methodOverride());
 
-  let controllers = glob.sync(path.join(config.root, 'app', 'controllers', '*.js'));
+  let controllers = glob.sync(path.join(config.root, 'app', 'controllers', '**', '*.js'));
   controllers.forEach(function (controller) {
+    console.log(`Loading controller: ${controller}`);
     require(controller)(app);
   });
 
