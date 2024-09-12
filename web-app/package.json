@@ -11,7 +11,7 @@
   "dependencies": {
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.6",
-    "express": "^4.19.2",
+    "express": "^4.21.0",
     "glob": "^10.3.10",
     "method-override": "^3.0.0",
     "morgan": "^1.10.0",
