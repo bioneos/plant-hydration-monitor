@@ -3,10 +3,12 @@
 #define ONBOARD_LED 2
 
 // NOTE: Change these values to the WiFi values for your personal WiFi
-const char SSID[] =  "SSID"; // Your current WiFi network SSID (can be hidden)
-const char PASS[] =  "XXXXXXXXXX"; // Your current WiFi network password
-const char *SERVER = "192.168.0.0"; // Your IP address on the WiFi network
+const char SSID[] =  "BioNeos"; // Your current WiFi network SSID (can be hidden)
+const char PASS[] =  "3192489610"; // Your current WiFi network password
+const char *SERVER = "192.168.x.x"; // Your IP address on the WiFi network
 const int SERVER_PORT = 3000;
+
+// SSID:BioNeos|PASS:3192489610|SERVER:192.168.1.100
 
 // Main loop process:
 //   1) Wake from sleep
@@ -50,9 +52,13 @@ bool availableConnectionInfo()
 {
   ModuleConfig config;
   EEPROM.get(0, config);
+  // Ensure strings are null-terminated before use to prevent crash on fresh EEPROM
+  config.ssid[sizeof(config.ssid) - 1] = '\0';
+  config.pass[sizeof(config.pass) - 1] = '\0';
   // TEMP
   Serial.println("Read from EEPROM:\n");
-  Serial.printf("SSID(%i) '%s', PASS(%i) '%s', SERVER %i.%i.%i.%i, PORT %i\n\n", config.ssid, strlen(config.ssid), config.pass, ((String) config.pass).length(),
+  // Corrected the order of arguments to match the format specifiers (%i, %s)
+  Serial.printf("SSID(%i) '%s', PASS(%i) '%s', SERVER %i.%i.%i.%i, PORT %i\n\n", strlen(config.ssid), config.ssid, ((String) config.pass).length(), config.pass,
     config.server[0], config.server[1], config.server[2], config.server[3], config.port);
   // end TEMP
 
@@ -63,14 +69,13 @@ bool availableConnectionInfo()
     return true;
 }
 
-/** 
- * Parse a configuration string from the Serial interface, or return
+/** * Parse a configuration string from the Serial interface, or return
  * false if the proper format was not used. In the case of a failure,
  * a repeated command will succeed if the format is corrected.
  *
  * This function expects that the Serial interface will receive a
  * command with the following format:
- *    "SSID:<name_of_ssid>\0PASS:<WPA2_or_3_password>\0SERVER:<IP_address_of_web_app>\n"
+ * "SSID:<name_of_ssid>\0PASS:<WPA2_or_3_password>\0SERVER:<IP_address_of_web_app>\n"
  *
  * NOTE: Because of the challenge of sending a null character ('\0') 
  * with the Arduino IDE -- there is a workaround where you can uncomment
@@ -312,6 +317,11 @@ void loop()
   // SEE ALSO: https://randomnerdtutorials.com/esp8266-deep-sleep-with-arduino-ide/
   // NOTE: Be sure to physically connect GPIO16 to RST or the device will not be
   //   able to wake itself up.
-  Serial.printf("Dropping to Deep Sleep for %i microseconds...\n", SLEEP_US);  
-  ESP.deepSleep(SLEEP_US); 
+  //Serial.printf("Dropping to Deep Sleep for %i microseconds...\n", SLEEP_US);  
+  //ESP.deepSleep(SLEEP_US); 
+
+  // Deep sleep requires a signal sent to the RST pin to wake up.
+  // For testing purposes, let's just use delay()
+  // 15 seconds, delay() uses millis not microseconds
+  delay(15000);
 }
