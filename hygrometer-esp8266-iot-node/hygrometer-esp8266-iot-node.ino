@@ -3,12 +3,12 @@
 #define ONBOARD_LED 2
 
 // NOTE: Change these values to the WiFi values for your personal WiFi
-const char SSID[] =  "BioNeos"; // Your current WiFi network SSID (can be hidden)
-const char PASS[] =  "3192489610"; // Your current WiFi network password
-const char *SERVER = "192.168.x.x"; // Your IP address on the WiFi network
+// char SSID[] =  ""; // Your current WiFi network SSID (can be hidden)
+// char PASS[] =  ""; // Your current WiFi network password
+char *SERVER = "192.168.x.x"; // Your IP address on the WiFi network
 const int SERVER_PORT = 3000;
 
-// SSID:BioNeos|PASS:3192489610|SERVER:192.168.1.100
+// SSID:Peter's iPhone|PASS:password|SERVER:192.168.1.100
 
 // Main loop process:
 //   1) Wake from sleep
@@ -35,21 +35,21 @@ struct ModuleConfig
 /**
  * Validate an int array as an IP address.
  */
-bool validIP(int data[])
+bool validIP(const int data[4])
 {
-  if (sizeof(data)/sizeof(int) != 4) return false;
-
-  for (int i = 0; i < 4; i++) if (data[i] < 0 || data[i] > 255) return false;
-
+  for (int i = 0; i < 4; i++)
+  {
+    if (data[i] < 0 || data[i] > 255) return false;
+  }
   return true;
 }
-
 
 /**
  * Check for WiFi configuration values in the EEPROM.
  */
 bool availableConnectionInfo()
 {
+  Serial.println("Checking for available connection info!");
   ModuleConfig config;
   EEPROM.get(0, config);
   // Ensure strings are null-terminated before use to prevent crash on fresh EEPROM
@@ -58,11 +58,16 @@ bool availableConnectionInfo()
   // TEMP
   Serial.println("Read from EEPROM:\n");
   // Corrected the order of arguments to match the format specifiers (%i, %s)
-  Serial.printf("SSID(%i) '%s', PASS(%i) '%s', SERVER %i.%i.%i.%i, PORT %i\n\n", strlen(config.ssid), config.ssid, ((String) config.pass).length(), config.pass,
-    config.server[0], config.server[1], config.server[2], config.server[3], config.port);
+  //Serial.printf("SSID(%i) '%s', PASS(%i) '%s', SERVER %i.%i.%i.%i, PORT %i\n\n", strlen(config.ssid), config.ssid, ((String) config.pass).length(), config.pass,
+  // config.server[0], config.server[1], config.server[2], config.server[3], config.port);
   // end TEMP
 
   // Validate what we can:
+  Serial.printf("SSID valid: %s\n", (strlen(config.ssid) >= 2 ? "true" : "false"));
+  Serial.printf("Pass valid: %s\n", (strlen(config.pass) >= 8 ? "true" : "false"));
+  Serial.printf("Server valid: %s\n", (validIP(config.server) ? "true" : "false"));
+  Serial.printf("Port valid: %s\n", (config.port > 0 && config.port <= 65535 ? "true" : "false"));
+
   if (strlen(config.ssid) < 2 || strlen(config.pass) < 8 || !validIP(config.server) || config.port <= 0 || config.port > 65535)
     return false;
   else
@@ -140,15 +145,41 @@ bool saveConfigData(int length)
       else if (i > stop2) server[i - stop2 - 1] = incoming[i];
     }
     // TEMP
-    Serial.printf("SSID: %s and PASS: %s and SERVER: %s\n", ssid, pass, server);
+    //Serial.printf("SSID: %s and PASS: %s and SERVER: %s\n", ssid, pass, server);
     // end TEMP
 
     // Check each setting for the proper prefix
     if (!((String) ssid).startsWith("SSID:") || !((String) pass).startsWith("PASS:") || !((String) server).startsWith("SERVER:")) return false;
 
-    // Save our configuration
-    Serial.println("Would save config NOW");
-    // TODO
+    ModuleConfig config;
+    strncpy(config.ssid, ssid + 5, sizeof(config.ssid)); // Skip "SSID:"
+    config.ssid[sizeof(config.ssid) - 1] = '\0';
+
+    strncpy(config.pass, pass + 5, sizeof(config.pass)); // Skip "PASS:"
+    config.pass[sizeof(config.pass) - 1] = '\0';
+
+    // Convert IP string to 4 integers
+    String serverStr = String(server + 7); // Skip "SERVER:"
+    int parsedIP[4];
+    if (sscanf(serverStr.c_str(), "%d.%d.%d.%d", &parsedIP[0], &parsedIP[1], &parsedIP[2], &parsedIP[3]) != 4) {
+      Serial.println("Failed to parse IP address.");
+      return false;
+    }
+    memcpy(config.server, parsedIP, sizeof(parsedIP));
+
+
+    config.port = SERVER_PORT;
+
+    Serial.printf("Parsed IP: %d.%d.%d.%d\n", parsedIP[0], parsedIP[1], parsedIP[2], parsedIP[3]);
+
+    EEPROM.put(0, config);
+    if (!EEPROM.commit()) {
+      Serial.println("EEPROM commit failed");
+      return false;
+    }
+
+    Serial.println("✅ Configuration saved to EEPROM.");
+
     return true;
   }
 }
@@ -202,22 +233,27 @@ void setup()
   // Onboard LED indicator for monitoring
   pinMode(ONBOARD_LED, OUTPUT);
 
+  EEPROM.begin(sizeof(ModuleConfig));
+
   if (!availableConnectionInfo())
   {
     awaitConfigFromSerial();
   }
 
-  Serial.printf("\n\nConnecting to: %s\n", SSID);
   // Turn this on for lots more debug output from the ESP8266 library (noisy)
   //Serial.setDebugOutput(true);
 
   int status = WL_IDLE_STATUS;
+  ModuleConfig config;
+  EEPROM.get(0, config);
 
+
+  Serial.printf("\n\nConnecting to: %s\n", config.ssid);
   // Connect to WiFi, checking status every .5 seconds
   // Feedback via LED (needs documentation)
   int count = 0;
   WiFi.mode(WIFI_STA);
-  status = WiFi.begin(SSID, PASS);
+  status = WiFi.begin(config.ssid, config.pass);
   while (status != WL_CONNECTED)
   {
     status = WiFi.status();
