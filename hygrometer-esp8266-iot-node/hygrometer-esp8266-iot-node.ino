@@ -18,7 +18,7 @@ const int SERVER_PORT = 3000;
 const int NUM_READS = 10;
 const int READ_DELAY_MS = 100;
 // 5 minutes:
-//const int SLEEP_US = 5 * 60 * 1000000;
+// const int SLEEP_US = 5 * 60 * 1000000;
 // 15 seconds (useful when troubleshooting / in development):
 const int SLEEP_US = 15 * 1000000;
 WiFiClient client;
@@ -39,7 +39,8 @@ bool validIP(const int data[4])
 {
   for (int i = 0; i < 4; i++)
   {
-    if (data[i] < 0 || data[i] > 255) return false;
+    if (data[i] < 0 || data[i] > 255)
+      return false;
   }
   return true;
 }
@@ -58,7 +59,7 @@ bool availableConnectionInfo()
   // TEMP
   Serial.println("Read from EEPROM:\n");
   // Corrected the order of arguments to match the format specifiers (%i, %s)
-  //Serial.printf("SSID(%i) '%s', PASS(%i) '%s', SERVER %i.%i.%i.%i, PORT %i\n\n", strlen(config.ssid), config.ssid, ((String) config.pass).length(), config.pass,
+  // Serial.printf("SSID(%i) '%s', PASS(%i) '%s', SERVER %i.%i.%i.%i, PORT %i\n\n", strlen(config.ssid), config.ssid, ((String) config.pass).length(), config.pass,
   // config.server[0], config.server[1], config.server[2], config.server[3], config.port);
   // end TEMP
 
@@ -82,9 +83,9 @@ bool availableConnectionInfo()
  * command with the following format:
  * "SSID:<name_of_ssid>\0PASS:<WPA2_or_3_password>\0SERVER:<IP_address_of_web_app>\n"
  *
- * NOTE: Because of the challenge of sending a null character ('\0') 
+ * NOTE: Because of the challenge of sending a null character ('\0')
  * with the Arduino IDE -- there is a workaround where you can uncomment
- * the "specialDelimiter" line in the function to allow it to accept a 
+ * the "specialDelimiter" line in the function to allow it to accept a
  * second delimiter instead of the '\0' char. This allows you to manually
  * send a configuration to the device without disconnecting the Serial
  * Monitor in the IDE. However, most ASCII printable characters (those
@@ -113,7 +114,7 @@ bool saveConfigData(int length)
   // TODO: Improve with strtok() ?
   char delimiter = '\0', specialDelimiter = '\0';
   // Uncomment to make it easier to use Serial Monitor
-  specialDelimiter = '|'; 
+  specialDelimiter = '|';
   int stop1 = 0, stop2 = 0, stop3 = length;
   for (int pos = 0; pos < length; pos++)
   {
@@ -140,16 +141,20 @@ bool saveConfigData(int length)
     char ssid[stop1 + 1], pass[stop2 - stop1 + 1], server[stop3 - stop2 + 1];
     for (int i = 0; i < length; i++)
     {
-      if (i <= stop1) ssid[i] = incoming[i];
-      else if (i > stop1 && i <= stop2) pass[i - stop1 - 1] = incoming[i];
-      else if (i > stop2) server[i - stop2 - 1] = incoming[i];
+      if (i <= stop1)
+        ssid[i] = incoming[i];
+      else if (i > stop1 && i <= stop2)
+        pass[i - stop1 - 1] = incoming[i];
+      else if (i > stop2)
+        server[i - stop2 - 1] = incoming[i];
     }
     // TEMP
-    //Serial.printf("SSID: %s and PASS: %s and SERVER: %s\n", ssid, pass, server);
+    // Serial.printf("SSID: %s and PASS: %s and SERVER: %s\n", ssid, pass, server);
     // end TEMP
 
     // Check each setting for the proper prefix
-    if (!((String) ssid).startsWith("SSID:") || !((String) pass).startsWith("PASS:") || !((String) server).startsWith("SERVER:")) return false;
+    if (!((String)ssid).startsWith("SSID:") || !((String)pass).startsWith("PASS:") || !((String)server).startsWith("SERVER:"))
+      return false;
 
     ModuleConfig config;
     strncpy(config.ssid, ssid + 5, sizeof(config.ssid)); // Skip "SSID:"
@@ -161,19 +166,20 @@ bool saveConfigData(int length)
     // Convert IP string to 4 integers
     String serverStr = String(server + 7); // Skip "SERVER:"
     int parsedIP[4];
-    if (sscanf(serverStr.c_str(), "%d.%d.%d.%d", &parsedIP[0], &parsedIP[1], &parsedIP[2], &parsedIP[3]) != 4) {
+    if (sscanf(serverStr.c_str(), "%d.%d.%d.%d", &parsedIP[0], &parsedIP[1], &parsedIP[2], &parsedIP[3]) != 4)
+    {
       Serial.println("Failed to parse IP address.");
       return false;
     }
     memcpy(config.server, parsedIP, sizeof(parsedIP));
-
 
     config.port = SERVER_PORT;
 
     Serial.printf("Parsed IP: %d.%d.%d.%d\n", parsedIP[0], parsedIP[1], parsedIP[2], parsedIP[3]);
 
     EEPROM.put(0, config);
-    if (!EEPROM.commit()) {
+    if (!EEPROM.commit())
+    {
       Serial.println("EEPROM commit failed");
       return false;
     }
@@ -186,7 +192,7 @@ bool saveConfigData(int length)
 
 /**
  * Slow poll (3s) the Serial interface until a configuration is supplied.
- * Announce that we are awaiting a config on the serial interface every 
+ * Announce that we are awaiting a config on the serial interface every
  * 1 minute, while blinking the onboard LED every 3 seconds;
  */
 void awaitConfigFromSerial()
@@ -195,7 +201,8 @@ void awaitConfigFromSerial()
   int count = 0;
   while (!configured)
   {
-    if (count % 20 == 0) Serial.println("Awaiting configuration...");
+    if (count % 20 == 0)
+      Serial.println("Awaiting configuration...");
     digitalWrite(ONBOARD_LED, LOW);
     delay(500);
     digitalWrite(ONBOARD_LED, HIGH);
@@ -241,12 +248,11 @@ void setup()
   }
 
   // Turn this on for lots more debug output from the ESP8266 library (noisy)
-  //Serial.setDebugOutput(true);
+  // Serial.setDebugOutput(true);
 
   int status = WL_IDLE_STATUS;
   ModuleConfig config;
   EEPROM.get(0, config);
-
 
   Serial.printf("\n\nConnecting to: %s\n", config.ssid);
   // Connect to WiFi, checking status every .5 seconds
@@ -265,15 +271,15 @@ void setup()
     count++;
 
     // Every 10 seconds, report trouble connecting
-    if (count % 20 == 0) 
+    if (count % 20 == 0)
     {
       Serial.println("\n\nTrouble connecting. Current Diagnostics:");
       WiFi.printDiag(Serial);
 
       // Rapidly flash the LED 5 times when unable to connect
-      for (int i = 0; i < 5; i++) 
+      for (int i = 0; i < 5; i++)
       {
-        digitalWrite(ONBOARD_LED, LOW);  // On
+        digitalWrite(ONBOARD_LED, LOW); // On
         delay(100);
         digitalWrite(ONBOARD_LED, HIGH); // Off
         delay(100);
@@ -291,31 +297,41 @@ void loop()
   // Start our read process and turn on the LED
   Serial.println("Starting soil moisture measurement...");
   digitalWrite(ONBOARD_LED, LOW);
-  // Read 10 values from the sensor, 1 second apart 
+  // Read 10 values from the sensor, 1 second apart
   int totSum = 0;
-  for (int k = 0; k < NUM_READS; k++){
+  for (int k = 0; k < NUM_READS; k++)
+  {
     totSum += analogRead(A0);
     // TODO: Should we go to deeper sleep here?
     delay(READ_DELAY_MS);
   }
   // This smooths out the sensor readings ten times with one second intervals
-  // TODO: Let's review the reasoning behind this smoothing, not sure I understand 
+  // TODO: Let's review the reasoning behind this smoothing, not sure I understand
   //   what we are doing here (or why). At a minimum we should get rid of the magic
   //   numbers so we can change the number of reads
-  int moisture = ((totSum / NUM_READS) / 900) * 100; 
+  int moisture = ((totSum / NUM_READS) / 900) * 100;
   Serial.printf("Done: %i\n", moisture);
 
+  // Get server configuration from EEPROM
+  ModuleConfig config;
+  EEPROM.get(0, config);
+
   // Open a basic HTTP connection to the server
-  Serial.printf("Attempted to report moisture value of '%i' to server at: %s:%i\n", moisture, SERVER, SERVER_PORT);
-  if (client.connect(SERVER, SERVER_PORT))  
+  Serial.printf("Attempted to report moisture value of '%i' to server at: %d.%d.%d.%d:%i\n",
+                moisture, config.server[0], config.server[1], config.server[2], config.server[3], SERVER_PORT);
+  if (client.connect(IPAddress(config.server[0], config.server[1], config.server[2], config.server[3]), SERVER_PORT))
   {
     // Create our POST request message Body content
     String postStr = "sensorVal=";
     postStr += String(moisture);
 
+    // Create host header with actual server IP
+    String hostHeader = String(config.server[0]) + "." + String(config.server[1]) + "." +
+                        String(config.server[2]) + "." + String(config.server[3]);
+
     // Send our POST request
-    client.print("POST /saturation HTTP/1.1\r\n");
-    client.print("Host: localhost\r\n");
+    client.print("POST /api/saturation HTTP/1.1\r\n");
+    client.print("Host: " + hostHeader + "\r\n");
     client.print("Connection: close\r\n");
     client.print("Content-Type: application/x-www-form-urlencoded\r\n");
     client.print("Content-Length: " + String(postStr.length()) + "\r\n");
@@ -329,7 +345,7 @@ void loop()
     // Rapid flash of the Onboard LED
     digitalWrite(ONBOARD_LED, HIGH); // Off
     delay(100);
-    digitalWrite(ONBOARD_LED, LOW);  // On
+    digitalWrite(ONBOARD_LED, LOW); // On
     delay(100);
   }
   else
@@ -338,7 +354,7 @@ void loop()
     Serial.println("The request could not be processed or timed out.");
 
     // Rapidly flash the LED 3 times when an error occurs
-    for (int i = 0; i < 3; i++) 
+    for (int i = 0; i < 3; i++)
     {
       digitalWrite(ONBOARD_LED, HIGH); // Off
       delay(100);
@@ -348,13 +364,13 @@ void loop()
   }
   // Turn off the LED
   digitalWrite(ONBOARD_LED, HIGH);
-  
+
   // Wait in Deep Sleep before repeating the measurement (to save battery)
   // SEE ALSO: https://randomnerdtutorials.com/esp8266-deep-sleep-with-arduino-ide/
   // NOTE: Be sure to physically connect GPIO16 to RST or the device will not be
   //   able to wake itself up.
-  //Serial.printf("Dropping to Deep Sleep for %i microseconds...\n", SLEEP_US);  
-  //ESP.deepSleep(SLEEP_US); 
+  // Serial.printf("Dropping to Deep Sleep for %i microseconds...\n", SLEEP_US);
+  // ESP.deepSleep(SLEEP_US);
 
   // Deep sleep requires a signal sent to the RST pin to wake up.
   // For testing purposes, let's just use delay()
