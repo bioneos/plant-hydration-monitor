@@ -18,6 +18,10 @@ router.get('/saturation/:plant_id', async function (req, res, next) {
     where: { plantId: req.params.plant_id },
   });
 
+  // TODO: should there be any logic for checking if the plant exists?
+  // we are returning that there are no moisture values for this plant
+  // but the plant might not exist at all
+
   let moistureValues = [];
   result.forEach((obj) => {
     moistureValues.push(obj.toJSON());
@@ -67,6 +71,12 @@ router.post('/saturation', async function (req, res, next) {
   const plant = await db.Plant.findOne({
     where: { MAC: mac },
   });
+
+  if (!plant) {
+    return res
+      .status(404)
+      .json({ error: 'No plant found with the given MAC address' });
+  }
 
   // Create a new Moisture Value
   const moisture = await db.Moisture.create({
