@@ -37,6 +37,18 @@ function createPlantCard(plant, saturationData) {
   progressBar.className = `bg-${moistureColor}-500 h-3 rounded-full transition-all duration-500 ease-in-out`;
   progressBar.style.width = `${moisturePercentage}%`;
 
+  const cardElement = clone.querySelector('div');
+  cardElement.addEventListener('click', () => {
+    console.log(`Clicked on ${plant.name}`);
+    window.location.href = `/plant/${plant.id}`;
+  });
+
+  cardElement.classList.add(
+    'cursor-pointer',
+    'hover:shadow-lg',
+    'transition-shadow'
+  );
+
   return clone;
 }
 
