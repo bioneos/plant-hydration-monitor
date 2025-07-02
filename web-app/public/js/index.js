@@ -76,6 +76,17 @@ const fetchPlants = async () => {
 };
 
 $(document).ready(function () {
+  // update the last-updated time
+  const lastUpdatedElement = document.getElementById('last-updated');
+  const updateLastUpdated = () => {
+    const now = new Date();
+    lastUpdatedElement.textContent = `Last updated: ${now.toLocaleTimeString()}`;
+  };
   fetchPlants();
-  setInterval(fetchPlants, 60000);
+  updateLastUpdated();
+  const update = () => {
+    fetchPlants();
+    updateLastUpdated();
+  };
+  setInterval(update, 60000);
 });
