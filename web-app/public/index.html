@@ -1,52 +1,89 @@
 <!DOCTYPE html>
-<html lang="En">
+<html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="css/plant_saturation.css">
-    <!--Link Materialize-->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-    <!--Import Google Icon Font-->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <title>Plant Hydration Monitor</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bio::Neos Plant Hydration Monitor Dashboard</title>
+    <link href="css/output.css" rel="stylesheet" />
   </head>
-  <body>
-    <div id="head">
-    <h1>Bio::Neos Plant Monitor</h1>
-    </div>
-  <!--
-    Previos Bar Code for Pie Chart:
-  </div>
-    <div class="bar_container">
-      <div id="main_container">
-        <div id="pbar" class="progress-pie-chart" data-percent="0">
-          <div class="ppc-progress">
-            <div class="ppc-progress-fill"></div>
-          </div>
-          <div class="ppc-percents">
-            <div class="pcc-percents-wrapper">
-              <img src="img/transparent_leaves_1.png" alt="A pie chart with a plant in the middle.">
+  <body class="dark:bg-zinc-800 dark:text-white font-sans">
+    <!-- using tailwind -->
+    <header class="bg-black shadow">
+      <div class="container mx-auto px-4 py-4 flex justify-center items-center">
+        <img src="img/bioneos-logo.png" alt="Bio::Neos Logo" class="h-8 mr-4" />
+        <h1 class="text-2xl font-bold text-center text-white">
+          Plant Hydration Monitor
+        </h1>
+      </div>
+    </header>
+
+    <main>
+      <div class="container mx-auto px-4 py-8">
+        <h2 class="text-xl font-semibold mb-4">Your Plants</h2>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">
+          Monitor the hydration levels of your plants in real-time.
+        </p>
+        <div
+          class="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6"
+          id="plant-cards"
+        >
+          <!-- cards will be loaded by JS -->
+        </div>
+
+        <!-- template for a plant card -->
+        <template id="plant-card-template">
+          <div
+            class="bg-white dark:bg-zinc-800 shadow-md dark:shadow-zinc-600 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 border border-gray-200 dark:border-zinc-600"
+          >
+            <h2 class="text-xl font-semibold mb-2" data-field="name"></h2>
+            <div class="flex items-center justify-between mb-4">
+              <div class="w-full">
+                <div class="relative pt-1">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-600 dark:text-gray-300"
+                      >Moisture Level</span
+                    >
+                    <div class="text-right">
+                      <span
+                        class="text-sm font-semibold"
+                        data-field="percentage"
+                      ></span>
+                      <span
+                        class="block text-xs font-medium"
+                        data-field="status"
+                      ></span>
+                    </div>
+                  </div>
+                  <div
+                    class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3"
+                  >
+                    <div
+                      class="h-3 rounded-full transition-all duration-500 ease-in-out"
+                      data-field="progress-bar"
+                    ></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <progress style="display: none" id="progress_bar" value="0" max="100"></progress>
+        </template>
       </div>
-    </div>
-    -->
-    <main>
-    <img src="img/transparent_leaves_1.png" alt="A pie chart with a plant in the middle.">
-    <div class="rectangle"></div>
+    </main>
+
+    <!-- <div class="flex justify-center items-center mt-4">
+      <a
+        href="/plants.html"
+        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+        >Manage Plants</a
+      >
+      <a
+        href="/plant_saturation.html"
+        class="ml-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >View Plant Saturation</a
+      >
+    </div> -->
+
     <script src="js/jquery-3.1.1.min.js"></script>
-    <script src="js/rainbowvis.js"></script>
-    <script src="js/plant_saturation.js"></script>
-    <div class="buttonContainer">
-      <button class="btn waves-effect waves-light" type="submit" name="action" id="addButton">Add Device
-        <i class="material-icons right">computer</i>
-      </button>
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  </main>
-    <footer>&copy; 2025 Bio::Neos LLC</footer>
+    <script src="js/index.js"></script>
   </body>
 </html>
