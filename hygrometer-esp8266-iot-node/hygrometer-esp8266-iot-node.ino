@@ -30,6 +30,8 @@ struct ModuleConfig
   char pass[64];
   int server[4];
   int port;
+  char name[32];
+  char location[64];
 };
 
 /**
@@ -62,14 +64,19 @@ bool availableConnectionInfo()
   // Serial.printf("SSID(%i) '%s', PASS(%i) '%s', SERVER %i.%i.%i.%i, PORT %i\n\n", strlen(config.ssid), config.ssid, ((String) config.pass).length(), config.pass,
   // config.server[0], config.server[1], config.server[2], config.server[3], config.port);
   // end TEMP
+  config.name[sizeof(config.name) - 1] = '\0';
+  config.location[sizeof(config.location) - 1] = '\0';
 
   // Validate what we can:
   Serial.printf("SSID valid: %s\n", (strlen(config.ssid) >= 2 ? "true" : "false"));
   Serial.printf("Pass valid: %s\n", (strlen(config.pass) >= 8 ? "true" : "false"));
   Serial.printf("Server valid: %s\n", (validIP(config.server) ? "true" : "false"));
   Serial.printf("Port valid: %s\n", (config.port > 0 && config.port <= 65535 ? "true" : "false"));
+  Serial.printf("Name valid: %s\n", (strlen(config.name) >= 1 ? "true" : "false"));
+  Serial.printf("Location valid: %s\n", (strlen(config.location) >= 1 ? "true" : "false"));
 
-  if (strlen(config.ssid) < 2 || strlen(config.pass) < 8 || !validIP(config.server) || config.port <= 0 || config.port > 65535)
+  if (strlen(config.ssid) < 2 || strlen(config.pass) < 8 || !validIP(config.server) ||
+      config.port <= 0 || config.port > 65535 || strlen(config.name) < 1 || strlen(config.location) < 1)
     return false;
   else
     return true;
@@ -81,7 +88,7 @@ bool availableConnectionInfo()
  *
  * This function expects that the Serial interface will receive a
  * command with the following format:
- * "SSID:<name_of_ssid>\0PASS:<WPA2_or_3_password>\0SERVER:<IP_address_of_web_app>\n"
+ * "SSID:<name_of_ssid>|PASS:<WPA2_or_3_password>|SERVER:<IP_address_of_web_app>|NAME:<plant_name>|LOCATION:<plant_location>\n"
  *
  * NOTE: Because of the challenge of sending a null character ('\0')
  * with the Arduino IDE -- there is a workaround where you can uncomment
@@ -93,6 +100,7 @@ bool availableConnectionInfo()
  * as well and might interfere with your current local configuration. In
  * the case of a conflict, just be sure to change the "specialDelimiter" to
  * a character that isn't used by your SSID or WPA2/3 password.
+ * Example: "SSID:MyWiFi|PASS:mypassword|SERVER:192.168.1.100|NAME:Plant #777|LOCATION:The Office"
  */
 bool saveConfigData(int length)
 {
@@ -115,7 +123,7 @@ bool saveConfigData(int length)
   char delimiter = '\0', specialDelimiter = '\0';
   // Uncomment to make it easier to use Serial Monitor
   specialDelimiter = '|';
-  int stop1 = 0, stop2 = 0, stop3 = length;
+  int stop1 = 0, stop2 = 0, stop3 = 0, stop4 = 0, stop5 = length;
   for (int pos = 0; pos < length; pos++)
   {
     if (stop1 == 0 && (incoming[pos] == delimiter || incoming[pos] == specialDelimiter))
@@ -128,32 +136,49 @@ bool saveConfigData(int length)
       stop2 = pos;
       incoming[pos] = '\0';
     }
+    else if (stop3 == 0 && (incoming[pos] == delimiter || incoming[pos] == specialDelimiter))
+    {
+      stop3 = pos;
+      incoming[pos] = '\0';
+    }
+    else if (stop4 == 0 && (incoming[pos] == delimiter || incoming[pos] == specialDelimiter))
+    {
+      stop4 = pos;
+      incoming[pos] = '\0';
+    }
   }
   incoming[length - 1] = '\0';
 
-  if (stop1 == 0 || stop2 == 0 || stop3 == 0)
+  if (stop1 == 0 || stop2 == 0 || stop3 == 0 || stop4 == 0 || stop5 == 0)
   {
     return false;
   }
   else
   {
     // Parse into separate strings
-    char ssid[stop1 + 1], pass[stop2 - stop1 + 1], server[stop3 - stop2 + 1];
+    char ssid[stop1 + 1], pass[stop2 - stop1 + 1], server[stop3 - stop2 + 1],
+        name[stop4 - stop3 + 1], location[stop5 - stop4 + 1];
+
     for (int i = 0; i < length; i++)
     {
       if (i <= stop1)
         ssid[i] = incoming[i];
       else if (i > stop1 && i <= stop2)
         pass[i - stop1 - 1] = incoming[i];
-      else if (i > stop2)
+      else if (i > stop2 && i <= stop3)
         server[i - stop2 - 1] = incoming[i];
+      else if (i > stop3 && i <= stop4)
+        name[i - stop3 - 1] = incoming[i];
+      else if (i > stop4)
+        location[i - stop4 - 1] = incoming[i];
     }
-    // TEMP
-    // Serial.printf("SSID: %s and PASS: %s and SERVER: %s\n", ssid, pass, server);
-    // end TEMP
 
     // Check each setting for the proper prefix
-    if (!((String)ssid).startsWith("SSID:") || !((String)pass).startsWith("PASS:") || !((String)server).startsWith("SERVER:"))
+    if (!((String)ssid).startsWith("SSID:") ||
+        !((String)pass).startsWith("PASS:") ||
+        !((String)server).startsWith("SERVER:") ||
+        !((String)name).startsWith("NAME:") ||
+        !((String)location).startsWith("LOCATION:"))
       return false;
 
     ModuleConfig config;
@@ -162,6 +187,12 @@ bool saveConfigData(int length)
 
     strncpy(config.pass, pass + 5, sizeof(config.pass)); // Skip "PASS:"
     config.pass[sizeof(config.pass) - 1] = '\0';
+
+    strncpy(config.name, name + 5, sizeof(config.name)); // Skip "NAME:"
+    config.name[sizeof(config.name) - 1] = '\0';
+
+    strncpy(config.location, location + 9, sizeof(config.location)); // Skip "LOCATION:"
+    config.location[sizeof(config.location) - 1] = '\0';
 
     // Convert IP string to 4 integers
     String serverStr = String(server + 7); // Skip "SERVER:"
@@ -175,7 +206,7 @@ bool saveConfigData(int length)
 
     config.port = SERVER_PORT;
 
-    Serial.printf("Parsed IP: %d.%d.%d.%d\n", parsedIP[0], parsedIP[1], parsedIP[2], parsedIP[3]);
+    Serial.printf("Parsed - Name: %s, Location: %s\n", config.name, config.location);
 
     EEPROM.put(0, config);
     if (!EEPROM.commit())
@@ -184,8 +215,7 @@ bool saveConfigData(int length)
       return false;
     }
 
-    Serial.println("✅ Configuration saved to EEPROM.");
-
+    Serial.println("Configuration saved to EEPROM successfully.");
     return true;
   }
 }
@@ -324,6 +354,12 @@ void loop()
     // Create our POST request message Body content
     String postStr = "sensorVal=";
     postStr += String(moisture);
+    postStr += "&mac=";
+    postStr += String(WiFi.macAddress());
+    postStr += "&name=";
+    postStr += String(config.name);
+    postStr += "&location=";
+    postStr += String(config.location);
 
     // Create host header with actual server IP
     String hostHeader = String(config.server[0]) + "." + String(config.server[1]) + "." +
