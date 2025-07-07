@@ -239,6 +239,9 @@ void setup()
 
   // Onboard LED indicator for monitoring
   pinMode(ONBOARD_LED, OUTPUT);
+  digitalWrite(ONBOARD_LED, LOW);
+  delay(3000);
+  digitalWrite(ONBOARD_LED, HIGH);
 
   EEPROM.begin(sizeof(ModuleConfig));
 
@@ -265,9 +268,9 @@ void setup()
     status = WiFi.status();
     Serial.print(".");
     digitalWrite(ONBOARD_LED, LOW);
-    delay(100);
+    delay(500);
     digitalWrite(ONBOARD_LED, HIGH);
-    delay(400);
+    delay(2500);
     count++;
 
     // Every 10 seconds, report trouble connecting
@@ -284,6 +287,7 @@ void setup()
         digitalWrite(ONBOARD_LED, HIGH); // Off
         delay(100);
       }
+      delay(5000);
     }
   }
   Serial.println("\nWiFi connected");
@@ -320,6 +324,10 @@ void loop()
   Serial.printf("Attempted to report moisture value of '%i' to server at: %d.%d.%d.%d:%i\n",
                 moisture, config.server[0], config.server[1], config.server[2], config.server[3], SERVER_PORT);
   if (client.connect(IPAddress(config.server[0], config.server[1], config.server[2], config.server[3]), SERVER_PORT))
+  digitalWrite(ONBOARD_LED, LOW);
+  delay(100);
+  digitalWrite(ONBOARD_LED, HIGH);
+  delay(100);
   {
     // Create our POST request message Body content
     String postStr = "sensorVal=";
@@ -356,10 +364,10 @@ void loop()
     // Rapidly flash the LED 3 times when an error occurs
     for (int i = 0; i < 3; i++)
     {
-      digitalWrite(ONBOARD_LED, HIGH); // Off
-      delay(100);
       digitalWrite(ONBOARD_LED, LOW); // On
       delay(100);
+      digitalWrite(ONBOARD_LED, HIGH); // Off
+      delay(400);
     }
   }
   // Turn off the LED
