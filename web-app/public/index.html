@@ -73,6 +73,15 @@
                 </div>
               </div>
             </div>
+            <div class="flex justify-end">
+              <button
+                class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 cursor-pointer"
+                data-field="delete-btn"
+                onclick="openDeletePlantModal(this)"
+              >
+                Remove Plant
+              </button>
+            </div>
           </div>
         </template>
       </div>
@@ -230,6 +239,109 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- delete plant confirm modal -->
+    <div
+      id="delete-plant-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      "
+    >
+      <div
+        class="bg-white dark:bg-zinc-800 rounded-lg shadow-lg p-6 w-11/12 max-w-md"
+      >
+        <h2 class="text-xl font-semibold mb-4 text-red-600 dark:text-red-400">
+          Remove Plant Monitor
+        </h2>
+        <div class="mb-4">
+          <p class="text-gray-700 dark:text-gray-300 mb-2">
+            Are you sure you want to remove
+            <strong id="delete-plant-name"></strong>?
+          </p>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            This will delete the plant from the database and optionally clear
+            the device's EEPROM.
+          </p>
+
+          <div class="mb-4">
+            <label class="flex items-center">
+              <input
+                type="checkbox"
+                id="clear-device-eeprom"
+                class="mr-2 rounded border-gray-300 text-red-600 focus:ring-red-500"
+              />
+              <span class="text-sm text-gray-700 dark:text-gray-300">
+                Also clear device EEPROM (requires device to be connected)
+              </span>
+            </label>
+          </div>
+
+          <div id="delete-serial-device-section" class="mb-4 hidden">
+            <label
+              for="delete-serial-device"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            >
+              Select Device to Clear
+            </label>
+            <div class="flex gap-2">
+              <select
+                id="delete-serial-device"
+                class="flex-1 min-w-0 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 dark:bg-zinc-700 dark:text-white"
+              >
+                <option value="">Select a device...</option>
+              </select>
+              <button
+                type="button"
+                id="delete-refresh-devices"
+                class="flex-shrink-0 p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-200 flex items-center justify-center w-10 h-10 cursor-pointer"
+                onclick="refreshDeleteSerialDevices()"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="white"
+                  viewBox="0 0 50 50"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M25 38c-7.2 0-13-5.8-13-13 0-3.2 1.2-6.2 3.3-8.6l1.5 1.3C15 19.7 14 22.3 14 25c0 6.1 4.9 11 11 11 1.6 0 3.1-.3 4.6-1l.8 1.8c-1.7.8-3.5 1.2-5.4 1.2z"
+                  />
+                  <path
+                    d="M34.7 33.7l-1.5-1.3c1.8-2 2.8-4.6 2.8-7.3 0-6.1-4.9-11-11-11-1.6 0-3.1.3-4.6 1l-.8-1.8c1.7-.8 3.5-1.2 5.4-1.2 7.2 0 13 5.8 13 13 0 3.1-1.2 6.2-3.3 8.6z"
+                  />
+                  <path d="M18 24h-2v-6h-6v-2h8z" />
+                  <path d="M40 34h-8v-8h2v6h6z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <button
+            type="button"
+            class="bg-gray-300 dark:bg-zinc-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-zinc-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 cursor-pointer"
+            onclick="closeDeletePlantModal()"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            id="confirm-delete-btn"
+            class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 cursor-pointer"
+            onclick="confirmDeletePlant()"
+          >
+            Remove Plant
+          </button>
+        </div>
       </div>
     </div>
 

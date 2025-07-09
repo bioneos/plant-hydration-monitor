@@ -255,6 +255,169 @@ router.post('/serial/configure', async (req, res) => {
   }
 });
 
+router.post('/serial/clear-eeprom', async (req, res) => {
+  try {
+    const { devicePath } = req.body;
+
+    if (!devicePath) {
+      return res.status(400).json({
+        success: false,
+        message: 'Device path is required',
+      });
+    }
+
+    console.log(`Attempting to clear EEPROM on device at ${devicePath}`);
+
+    // create serial connection
+    const port = new SerialPort({
+      path: devicePath,
+      baudRate: 115200,
+      autoOpen: false,
+    });
+
+    // wrapper for serial operations
+    return new Promise((resolve, reject) => {
+      let responseReceived = false;
+      let allResponses = [];
+
+      const timeout = setTimeout(() => {
+        if (!responseReceived) {
+          console.log(
+            'EEPROM clear timeout - no valid response received from device'
+          );
+          console.log(
+            'All responses received during timeout period:',
+            allResponses
+          );
+          if (port.isOpen) {
+            port.close();
+          }
+          reject(
+            new Error(
+              'EEPROM clear timeout - no response from device. Make sure the ESP8266 is connected and in startup mode (restart the device).'
+            )
+          );
+        }
+      }, 10000); // 10 second timeout for CLEAR command
+
+      port.on('error', (err) => {
+        clearTimeout(timeout);
+        responseReceived = true;
+        console.error('Serial port error:', err.message);
+        if (port.isOpen) {
+          try {
+            port.close();
+          } catch (closeErr) {
+            console.error('Error closing port:', closeErr.message);
+          }
+        }
+        reject(
+          new Error(
+            `Serial port error: ${err.message}. Make sure the device is connected and not in use by another application.`
+          )
+        );
+      });
+
+      port.on('open', () => {
+        console.log('Serial port opened successfully for EEPROM clear');
+
+        // ESP8266 expects CLEAR command during startup (first 5 seconds)
+        setTimeout(() => {
+          console.log('Sending CLEAR command to device...');
+          port.write('CLEAR\n', (err) => {
+            if (err) {
+              clearTimeout(timeout);
+              responseReceived = true;
+              console.error('Failed to write CLEAR command:', err);
+              if (port.isOpen) {
+                port.close();
+              }
+              reject(err);
+            } else {
+              console.log('CLEAR command sent successfully');
+            }
+          });
+        }, 500);
+      });
+
+      port.on('data', (data) => {
+        const response = data.toString().trim();
+        allResponses.push(response);
+        console.log('Raw device response received:', JSON.stringify(response));
+
+        // join all responses to check for success indicators
+        const combinedResponse = allResponses.join('');
+
+        // check for EEPROM clear success indicators
+        if (
+          combinedResponse &&
+          (combinedResponse.includes('EEPROM cleared') ||
+            combinedResponse.includes('Wiping EEPROM') ||
+            combinedResponse.includes('Entering configuration mode') ||
+            combinedResponse.includes('Received CLEAR'))
+        ) {
+          console.log('EEPROM clear successful');
+          clearTimeout(timeout);
+          responseReceived = true;
+
+          setTimeout(() => {
+            if (port.isOpen) {
+              console.log('Closing serial port');
+              port.close();
+            }
+          }, 1000);
+
+          resolve({
+            success: true,
+            message: 'Device EEPROM cleared successfully',
+            deviceResponse: response,
+            allResponses: allResponses,
+          });
+        } else {
+          console.log(`Waiting for EEPROM clear confirmation: "${response}"`);
+        }
+      });
+
+      port.on('close', () => {
+        console.log('Serial port closed');
+      });
+
+      // open the port
+      console.log(`Opening serial port for EEPROM clear: ${devicePath}`);
+      port.open((err) => {
+        if (err) {
+          console.error('Failed to open serial port:', err.message);
+          clearTimeout(timeout);
+          responseReceived = true;
+          reject(
+            new Error(
+              `Failed to open serial port: ${err.message}. Make sure the device is connected and not in use.`
+            )
+          );
+        }
+      });
+    })
+      .then((result) => {
+        res.json(result);
+      })
+      .catch((error) => {
+        console.error('EEPROM clear error:', error);
+        res.status(500).json({
+          success: false,
+          message: error.message || 'Failed to clear device EEPROM',
+          error: error.toString(),
+        });
+      });
+  } catch (error) {
+    console.error('EEPROM clear error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message,
+    });
+  }
+});
+
 router.get('/serial/ports', async (req, res) => {
   try {
     const ports = await SerialPort.list();
