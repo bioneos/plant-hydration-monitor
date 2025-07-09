@@ -394,7 +394,7 @@ void loop()
     // One quick blink = success
     blinkLED(100, 100, 1);
     while (ledBlinkActive) updateLED();
-  }
+  } 
   
   else
   {
