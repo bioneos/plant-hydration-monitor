@@ -190,6 +190,48 @@ bool saveConfigData(int length)
   }
 }
 
+// --- Non-blocking LED Blink System ---
+unsigned long ledPreviousMillis = 0;
+bool ledState = HIGH;
+unsigned long ledOnDuration = 100;
+unsigned long ledOffDuration = 100;
+int ledBlinkCount = 0;       // Current blink count
+int ledBlinkTotal = 0;       // Total number of blinks to perform
+bool ledBlinkActive = false; // Whether LED is currently blinking
+
+// Function to configure LED blinking
+void blinkLED(unsigned long onTime, unsigned long offTime, int repeat = 0) {
+  ledOnDuration = onTime;
+  ledOffDuration = offTime;
+  ledBlinkTotal = repeat;
+  ledBlinkCount = 0;
+  ledState = HIGH;
+  digitalWrite(ONBOARD_LED, ledState);
+  ledPreviousMillis = millis();
+  ledBlinkActive = true;
+}
+
+// Function to update the LED state without blocking
+void updateLED() {
+  if (!ledBlinkActive) return;
+
+  unsigned long currentMillis = millis();
+  if (ledState == LOW && currentMillis - ledPreviousMillis >= ledOnDuration) {
+    ledState = HIGH;
+    ledPreviousMillis = currentMillis;
+    digitalWrite(ONBOARD_LED, ledState);
+  } else if (ledState == HIGH && currentMillis - ledPreviousMillis >= ledOffDuration) {
+    if (ledBlinkTotal > 0 && ledBlinkCount >= ledBlinkTotal) {
+      ledBlinkActive = false; // Stop blinking if target reached
+      return;
+    }
+    ledState = LOW;
+    ledPreviousMillis = currentMillis;
+    digitalWrite(ONBOARD_LED, ledState);
+    if (ledBlinkTotal > 0) ledBlinkCount++;
+  }
+}
+
 /**
  * Slow poll (3s) the Serial interface until a configuration is supplied.
  * Announce that we are awaiting a config on the serial interface every
@@ -199,14 +241,18 @@ void awaitConfigFromSerial()
 {
   bool configured = false;
   int count = 0;
+  unsigned long lastLOGMillis = 0;
+
+blinkLED(500,2500); //Slow blink while waiting for input
+
   while (!configured)
   {
+    updateLED();
+
     if (count % 20 == 0)
       Serial.println("Awaiting configuration...");
-    digitalWrite(ONBOARD_LED, LOW);
-    delay(500);
-    digitalWrite(ONBOARD_LED, HIGH);
-    delay(2500);
+    blinkLED(100, 600, -1)
+    while (ledBlinkActive) updateLED();
 
     // Check for activity on the serial interface
     int available = Serial.available();
@@ -225,6 +271,9 @@ void awaitConfigFromSerial()
     }
     count++;
   }
+
+  ledBlinkActive = false;
+  digitalWrite(ONBOARD_LED, HIGH)
 }
 
 /**
@@ -235,10 +284,15 @@ void setup()
   // Turn on serial communication for logging
   // TODO: when in production mode we will want to disable serial output to save energy
   Serial.begin(115200);
-  delay(10);
+  delay(100);
 
   // Onboard LED indicator for monitoring
   pinMode(ONBOARD_LED, OUTPUT);
+  digitalWrite(ONBOARD_LED, LOW);
+
+  //Signal boot: 3-second solid ON
+  blinkLED(3000, 0, 1);
+  while (ledBlinkActive) updateLED();
 
   EEPROM.begin(sizeof(ModuleConfig));
 
@@ -264,10 +318,8 @@ void setup()
   {
     status = WiFi.status();
     Serial.print(".");
-    digitalWrite(ONBOARD_LED, LOW);
-    delay(100);
-    digitalWrite(ONBOARD_LED, HIGH);
-    delay(400);
+  blinkLED(100, 400, -1);
+  while (ledBlinkActive) updateLED();
     count++;
 
     // Every 10 seconds, report trouble connecting
@@ -277,13 +329,9 @@ void setup()
       WiFi.printDiag(Serial);
 
       // Rapidly flash the LED 5 times when unable to connect
-      for (int i = 0; i < 5; i++)
-      {
-        digitalWrite(ONBOARD_LED, LOW); // On
-        delay(100);
-        digitalWrite(ONBOARD_LED, HIGH); // Off
-        delay(100);
-      }
+      blinkLED(100, 100, 5); // Fast blink diagnostics
+      while (ledBlinkActive) updateLED();
+      delay(5000); // Is there a way to do this witout a delay???
     }
   }
   Serial.println("\nWiFi connected");
@@ -343,24 +391,19 @@ void loop()
     Serial.println("Hooray! The request was sucessfully processed!");
 
     // Rapid flash of the Onboard LED
-    digitalWrite(ONBOARD_LED, HIGH); // Off
-    delay(100);
-    digitalWrite(ONBOARD_LED, LOW); // On
-    delay(100);
+    // One quick blink = success
+    blinkLED(100, 100, 1);
+    while (ledBlinkActive) updateLED();
   }
+  
   else
   {
     // Something went wrong
     Serial.println("The request could not be processed or timed out.");
 
     // Rapidly flash the LED 3 times when an error occurs
-    for (int i = 0; i < 3; i++)
-    {
-      digitalWrite(ONBOARD_LED, HIGH); // Off
-      delay(100);
-      digitalWrite(ONBOARD_LED, LOW); // On
-      delay(100);
-    }
+    blinkLED(100, 100, 3);
+    while (ledBlinkActive) updateLED();
   }
   // Turn off the LED
   digitalWrite(ONBOARD_LED, HIGH);
