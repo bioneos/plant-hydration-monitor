@@ -242,7 +242,31 @@ void setup()
 
   EEPROM.begin(sizeof(ModuleConfig));
 
-  if (!availableConnectionInfo())
+  if (availableConnectionInfo())
+  {
+    Serial.println("Startup: Waiting 5 seconds for CLEAR...");
+    unsigned long clearWindowStart = millis();
+    while (millis() - clearWindowStart < 5000)
+    {
+      if (Serial.available())
+      {
+        String incoming = Serial.readStringUntil('\n');
+        incoming.trim();
+        if (incoming.equals("CLEAR"))
+        {
+          Serial.println("Received CLEAR during startup. Wiping EEPROM...");
+          ModuleConfig emptyConfig;
+          memset(&emptyConfig, 0, sizeof(ModuleConfig));
+          EEPROM.put(0, emptyConfig);
+          EEPROM.commit();
+          Serial.println("EEPROM cleared. Entering configuration mode...");
+          awaitConfigFromSerial();
+          break; // skip checking EEPROM, since we just entered config
+        }
+      }
+    }
+  }
+  else
   {
     awaitConfigFromSerial();
   }
@@ -326,8 +350,7 @@ void loop()
     postStr += String(moisture);
 
     // Create host header with actual server IP
-    String hostHeader = String(config.server[0]) + "." + String(config.server[1]) + "." +
-                        String(config.server[2]) + "." + String(config.server[3]);
+    String hostHeader = String(config.server[0]) + "." + String(config.server[1]) + "." + String(config.server[2]) + "." + String(config.server[3]);
 
     // Send our POST request
     client.print("POST /api/saturation HTTP/1.1\r\n");
