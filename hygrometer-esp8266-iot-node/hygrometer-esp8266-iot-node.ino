@@ -186,6 +186,9 @@ bool saveConfigData(int length)
 
     Serial.println("✅ Configuration saved to EEPROM.");
 
+    // send MAC address after successful config
+    Serial.printf("MAC_ADDRESS:%s\n", WiFi.macAddress().c_str());
+
     return true;
   }
 }
@@ -200,8 +203,8 @@ void awaitConfigFromSerial()
   bool configured = false;
   int count = 0;
 
-  // send MAC address when entering configuration mode
-  Serial.printf("MAC_ADDRESS:%s\n", WiFi.macAddress().c_str());
+  // Note: MAC address will be sent after successful config parsing
+  // no need to send it when entering config mode
 
   while (!configured)
   {
@@ -246,8 +249,8 @@ void setup()
 
   EEPROM.begin(sizeof(ModuleConfig));
 
-  // send MAC address immediately on startup for identification
-  Serial.printf("MAC_ADDRESS:%s\n", WiFi.macAddress().c_str());
+  // Note: MAC address will be sent after successful config
+  // no need to send it on startup since web app waits for post-config MAC
 
   if (availableConnectionInfo())
   {
