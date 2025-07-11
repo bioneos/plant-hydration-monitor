@@ -62,20 +62,33 @@ router.get('/saturation/:plant_id/last', async function (req, res, next) {
  * Create a new saturation value for a plant.
  */
 router.post('/saturation', async function (req, res, next) {
-  saturation = req.body.sensorVal;
-  console.log('Received Saturation Value: ', saturation);
+  const saturation = req.body.sensorVal;
+  const macAddress = req.body.macAddress;
 
-  // TODO: Note that this will need to include a MAC address, hardcoding for now
+  console.log('Received Saturation Value:', saturation);
+  console.log('From MAC Address:', macAddress);
+
+  if (!saturation) {
+    return res.status(400).json({ error: 'sensorVal is required' });
+  }
+
+  if (!macAddress) {
+    return res.status(400).json({ error: 'macAddress is required' });
+  }
+
   // Get our target plant (based on MAC address of POST request)
-  const mac = '00:00:00:00:00:00';
   const plant = await db.Plant.findOne({
-    where: { MAC: mac },
+    where: { MAC: macAddress },
   });
 
   if (!plant) {
+    console.log(`No plant found with MAC address: ${macAddress}`);
     return res
       .status(404)
-      .json({ error: 'No plant found with the given MAC address' });
+      .json({
+        error: 'No plant found with the given MAC address',
+        macAddress: macAddress,
+      });
   }
 
   // Create a new Moisture Value
@@ -90,5 +103,9 @@ router.post('/saturation', async function (req, res, next) {
     console.log(`${n}: ${newVals[n].moisture} from ${newVals[n].createdAt}`);
   }
 
-  res.json({ message: 'SUCCESS', plant: plant.toJSON() });
+  res.json({
+    message: 'SUCCESS',
+    plant: plant.toJSON(),
+    macAddress: macAddress,
+  });
 });

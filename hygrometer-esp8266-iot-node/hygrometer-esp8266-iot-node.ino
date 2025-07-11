@@ -199,6 +199,10 @@ void awaitConfigFromSerial()
 {
   bool configured = false;
   int count = 0;
+
+  // send MAC address when entering configuration mode
+  Serial.printf("MAC_ADDRESS:%s\n", WiFi.macAddress().c_str());
+
   while (!configured)
   {
     if (count % 20 == 0)
@@ -241,6 +245,9 @@ void setup()
   pinMode(ONBOARD_LED, OUTPUT);
 
   EEPROM.begin(sizeof(ModuleConfig));
+
+  // send MAC address immediately on startup for identification
+  Serial.printf("MAC_ADDRESS:%s\n", WiFi.macAddress().c_str());
 
   if (availableConnectionInfo())
   {
@@ -345,9 +352,11 @@ void loop()
                 moisture, config.server[0], config.server[1], config.server[2], config.server[3], SERVER_PORT);
   if (client.connect(IPAddress(config.server[0], config.server[1], config.server[2], config.server[3]), SERVER_PORT))
   {
-    // Create our POST request message Body content
+    // Create our POST request message Body content with MAC address
     String postStr = "sensorVal=";
     postStr += String(moisture);
+    postStr += "&macAddress=";
+    postStr += WiFi.macAddress();
 
     // Create host header with actual server IP
     String hostHeader = String(config.server[0]) + "." + String(config.server[1]) + "." + String(config.server[2]) + "." + String(config.server[3]);

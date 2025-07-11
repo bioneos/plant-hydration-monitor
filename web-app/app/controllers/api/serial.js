@@ -1,6 +1,7 @@
 const express = require('express'),
   router = express.Router(),
-  { SerialPort } = require('serialport');
+  { SerialPort } = require('serialport'),
+  { ReadlineParser } = require('@serialport/parser-readline');
 
 module.exports = function (app) {
   app.use('/api', router);
@@ -8,8 +9,7 @@ module.exports = function (app) {
 
 router.post('/serial/configure', async (req, res) => {
   try {
-    const { ssid, password, plantName, location, macAddress, devicePath } =
-      req.body;
+    const { ssid, password, plantName, location, devicePath } = req.body;
 
     // NOTE: this impl has several security considerations...
     // - password is sent over HTTP
@@ -17,17 +17,11 @@ router.post('/serial/configure', async (req, res) => {
     // - consider encryption or secure key exchange for production???
     // - this works fine for local network development but not for production use
 
-    if (
-      !ssid ||
-      !password ||
-      !plantName ||
-      !location ||
-      !macAddress ||
-      !devicePath
-    ) {
+    if (!ssid || !password || !plantName || !location || !devicePath) {
       return res.status(400).json({
         success: false,
-        message: 'All fields are required',
+        message:
+          'SSID, password, plant name, location, and device path are required',
       });
     }
 
@@ -72,6 +66,7 @@ router.post('/serial/configure', async (req, res) => {
     return new Promise((resolve, reject) => {
       let responseReceived = false;
       let allResponses = []; // collect all responses for debugging
+      let detectedMacAddress = null; // store MAC address from device
 
       const timeout = setTimeout(() => {
         if (!responseReceived) {
@@ -113,6 +108,93 @@ router.post('/serial/configure', async (req, res) => {
 
       port.on('open', () => {
         console.log('Serial port opened successfully');
+
+        // set up line parser for cleaner line-by-line reading
+        const parser = new ReadlineParser({ delimiter: '\n' });
+        port.pipe(parser);
+
+        // handle parsed lines instead of raw data chunks
+        parser.on('data', (line) => {
+          const response = line.trim();
+          allResponses.push(response);
+          console.log('Device response line:', JSON.stringify(response));
+
+          // extract MAC address if present
+          if (response.startsWith('MAC_ADDRESS:')) {
+            detectedMacAddress = response.substring(12); // remove 'MAC_ADDRESS:' prefix
+            console.log('Detected MAC address:', detectedMacAddress);
+          }
+
+          // join all responses to check for success indicators
+          const combinedResponse = allResponses.join('');
+          console.log(
+            'Combined response so far:',
+            JSON.stringify(combinedResponse)
+          ); // check for ESP8266 config success indicators
+          if (
+            combinedResponse &&
+            (combinedResponse.includes('Configuration saved to EEPROM') ||
+              combinedResponse.includes('saved to EEPROM') ||
+              combinedResponse.includes('CONFIG_SAVED') ||
+              combinedResponse.includes('EEPROM commit') ||
+              combinedResponse.includes('Parsed IP:') ||
+              combinedResponse.includes('✅') ||
+              combinedResponse.includes('valid: true') ||
+              combinedResponse.includes('Pass valid: true') ||
+              combinedResponse.includes('Server valid: true') ||
+              combinedResponse.includes('Port valid: true') ||
+              combinedResponse.includes('Connecting to:') ||
+              combinedResponse === 'OK' ||
+              combinedResponse === 'SUCCESS')
+          ) {
+            // only successful if we also got a MAC address
+            if (!detectedMacAddress) {
+              console.log(
+                'Configuration indicators found but no MAC address detected yet, waiting...'
+              );
+              return; // keep waiting for MAC address (doesn't resolve the promise yet, just return out of the parser)
+            }
+
+            console.log(
+              'Valid device response detected and MAC address confirmed - configuration successful'
+            );
+            console.log(
+              'Success found in combined response:',
+              combinedResponse
+            );
+            clearTimeout(timeout);
+            responseReceived = true;
+
+            // close port after a short delay to ensure all data is received
+            setTimeout(() => {
+              if (port.isOpen) {
+                console.log('Closing serial port');
+                port.close();
+              }
+            }, 1000);
+
+            resolve({
+              success: true,
+              message:
+                'Device configured successfully - ESP8266 is attempting to connect to WiFi',
+              deviceResponse: response,
+              allResponses: allResponses,
+              combinedResponse: combinedResponse,
+              configSent: `SSID:${ssid}|PASS:***HIDDEN***|SERVER:${serverIP}`,
+              detectedMacAddress: detectedMacAddress,
+              plantInfo: {
+                name: plantName,
+                location: location,
+                devicePath: devicePath,
+              },
+            });
+          } else {
+            console.log(
+              `Ignoring response line (no success indicator yet): "${response}"`
+            );
+          }
+        });
+
         console.log(`Sending configuration: ${configStr.trim()}`);
         console.log(`Bytes to send: ${Buffer.from(configStr).length}`);
 
@@ -146,73 +228,11 @@ router.post('/serial/configure', async (req, res) => {
       });
 
       port.on('data', (data) => {
-        const response = data.toString().trim();
-        allResponses.push(response); // Track all responses
-        console.log('Raw device response received:', JSON.stringify(response));
-        console.log('Device response length:', response.length);
-        console.log('Device response (trimmed):', response);
-        console.log('Total responses so far:', allResponses.length);
-
-        // Join all responses to check for success indicators across chunks
-        const combinedResponse = allResponses.join('');
-        console.log(
-          'Combined response so far:',
-          JSON.stringify(combinedResponse)
+        // this should now be handled by the parser in the 'open' event
+        // keeping this just in case/backwards compatibility but it should not be called/used normally
+        console.warn(
+          'Raw data event called - this should be handled by parser now'
         );
-
-        // Check for ESP8266 config success indicators (in hygrometer-esp8266-iot-node.ino)
-        if (
-          combinedResponse &&
-          (combinedResponse.includes('Configuration saved to EEPROM') ||
-            combinedResponse.includes('saved to EEPROM') ||
-            combinedResponse.includes('CONFIG_SAVED') ||
-            combinedResponse.includes('EEPROM commit') ||
-            combinedResponse.includes('Parsed IP:') ||
-            combinedResponse.includes('✅') ||
-            combinedResponse.includes('valid: true') ||
-            combinedResponse.includes('Pass valid: true') ||
-            combinedResponse.includes('Server valid: true') ||
-            combinedResponse.includes('Port valid: true') ||
-            combinedResponse.includes('Connecting to:') ||
-            combinedResponse === 'OK' ||
-            combinedResponse === 'SUCCESS')
-        ) {
-          console.log(
-            'Valid device response detected - configuration successful'
-          );
-          console.log('Success found in combined response:', combinedResponse);
-          clearTimeout(timeout);
-          responseReceived = true;
-
-          // close port after a short delay to ensure all data is received
-          setTimeout(() => {
-            if (port.isOpen) {
-              console.log('Closing serial port');
-              port.close();
-            }
-          }, 1000);
-
-          resolve({
-            success: true,
-            message:
-              'Device configured successfully - ESP8266 is attempting to connect to WiFi',
-            deviceResponse: response,
-            allResponses: allResponses, // Include all responses for debugging
-            combinedResponse: combinedResponse, // Include combined response for debugging
-            configSent: `SSID:${ssid}|PASS:***HIDDEN***|SERVER:${serverIP}`,
-            plantInfo: {
-              name: plantName,
-              location: location,
-              macAddress: macAddress,
-              devicePath: devicePath,
-            },
-          });
-        } else {
-          console.log(
-            `Ignoring response chunk (no success indicator yet): "${response}"`
-          );
-          // don't resolve or reject here, keep waiting for real response
-        }
       });
 
       port.on('close', () => {
@@ -321,6 +341,47 @@ router.post('/serial/clear-eeprom', async (req, res) => {
       port.on('open', () => {
         console.log('Serial port opened successfully for EEPROM clear');
 
+        const parser = new ReadlineParser({ delimiter: '\n' });
+        port.pipe(parser);
+
+        parser.on('data', (line) => {
+          const response = line.trim();
+          allResponses.push(response);
+          console.log('Device response line:', JSON.stringify(response));
+
+          // join all responses to check for success indicators
+          const combinedResponse = allResponses.join('');
+
+          // check for EEPROM clear success indicators
+          if (
+            combinedResponse &&
+            (combinedResponse.includes('EEPROM cleared') ||
+              combinedResponse.includes('Wiping EEPROM') ||
+              combinedResponse.includes('Entering configuration mode') ||
+              combinedResponse.includes('Received CLEAR'))
+          ) {
+            console.log('EEPROM clear successful');
+            clearTimeout(timeout);
+            responseReceived = true;
+
+            setTimeout(() => {
+              if (port.isOpen) {
+                console.log('Closing serial port');
+                port.close();
+              }
+            }, 1000);
+
+            resolve({
+              success: true,
+              message: 'Device EEPROM cleared successfully',
+              deviceResponse: response,
+              allResponses: allResponses,
+            });
+          } else {
+            console.log(`Waiting for EEPROM clear confirmation: "${response}"`);
+          }
+        });
+
         // ESP8266 expects CLEAR command during startup (first 5 seconds)
         setTimeout(() => {
           console.log('Sending CLEAR command to device...');
@@ -341,41 +402,11 @@ router.post('/serial/clear-eeprom', async (req, res) => {
       });
 
       port.on('data', (data) => {
-        const response = data.toString().trim();
-        allResponses.push(response);
-        console.log('Raw device response received:', JSON.stringify(response));
-
-        // join all responses to check for success indicators
-        const combinedResponse = allResponses.join('');
-
-        // check for EEPROM clear success indicators
-        if (
-          combinedResponse &&
-          (combinedResponse.includes('EEPROM cleared') ||
-            combinedResponse.includes('Wiping EEPROM') ||
-            combinedResponse.includes('Entering configuration mode') ||
-            combinedResponse.includes('Received CLEAR'))
-        ) {
-          console.log('EEPROM clear successful');
-          clearTimeout(timeout);
-          responseReceived = true;
-
-          setTimeout(() => {
-            if (port.isOpen) {
-              console.log('Closing serial port');
-              port.close();
-            }
-          }, 1000);
-
-          resolve({
-            success: true,
-            message: 'Device EEPROM cleared successfully',
-            deviceResponse: response,
-            allResponses: allResponses,
-          });
-        } else {
-          console.log(`Waiting for EEPROM clear confirmation: "${response}"`);
-        }
+        // this should now be handled by the parser in the 'open' event
+        // keeping this just in case/backwards compatibility but it should not be called/used normally
+        console.warn(
+          'Raw data event called for EEPROM clear - this should be handled by parser now'
+        );
       });
 
       port.on('close', () => {

@@ -146,6 +146,14 @@ function closeRegisterPlantModal() {
   modal.classList.add('hidden');
   modal.style.display = 'none';
   clearStatusMessage();
+
+  // reset form
+  const form = document.getElementById('register-plant-form');
+  if (form) {
+    form.reset();
+  }
+
+  detectedMacAddress = null;
 }
 
 function showStatusMessage(message, isError = false) {
@@ -249,6 +257,8 @@ async function refreshSerialDevices() {
 }
 
 // serial communication functionality
+let detectedMacAddress = null;
+
 async function configureDevice(formData) {
   try {
     showStatusMessage('Connecting to device and sending configuration...');
@@ -263,7 +273,6 @@ async function configureDevice(formData) {
         password: formData.get('wifi-password'),
         plantName: formData.get('plant-name'),
         location: formData.get('plant-location'),
-        macAddress: formData.get('plant-mac'),
         devicePath: formData.get('serial-device'),
       }),
     });
@@ -271,10 +280,21 @@ async function configureDevice(formData) {
     const result = await response.json();
 
     if (result.success) {
+      // use the MAC address detected from the device response
+      const macAddress = result.detectedMacAddress;
+
+      if (!macAddress) {
+        showStatusMessage(
+          'Configuration completed but no MAC address was detected from device. Please try again.',
+          true
+        );
+        return;
+      }
+
+      detectedMacAddress = macAddress;
+
       showStatusMessage(
-        `Device configured successfully! Configuration sent: ${
-          result.configSent
-        } Device response: ${result.deviceResponse || 'No response'}`
+        `Device configured successfully! MAC address: ${macAddress}. Configuration sent: ${result.configSent}`
       );
 
       // register the plant in the database
@@ -289,7 +309,7 @@ async function configureDevice(formData) {
           body: JSON.stringify({
             name: formData.get('plant-name'),
             location: formData.get('plant-location'),
-            MAC: formData.get('plant-mac'),
+            MAC: macAddress,
           }),
         });
 
@@ -297,7 +317,7 @@ async function configureDevice(formData) {
 
         if (plantResponse.ok) {
           showStatusMessage(
-            `Plant "${plantResult.name}" successfully registered and configured!`
+            `Plant "${plantResult.name}" successfully registered and configured! MAC Address: ${macAddress}`
           );
         } else {
           showStatusMessage(
@@ -341,7 +361,6 @@ document.addEventListener('DOMContentLoaded', function () {
       const requiredFields = [
         'plant-name',
         'plant-location',
-        'plant-mac',
         'serial-device',
         'wifi-ssid',
         'wifi-password',
@@ -358,14 +377,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      // validate MAC format
-      const macAddress = formData.get('plant-mac');
-      const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
-      if (!macRegex.test(macAddress)) {
-        showStatusMessage(
-          'Please enter a valid MAC address (e.g., AA:BB:CC:DD:EE:FF)',
-          true
-        );
+      // check if device is selected
+      if (!formData.get('serial-device')?.trim()) {
+        showStatusMessage('Please select a serial device', true);
         return;
       }
 
