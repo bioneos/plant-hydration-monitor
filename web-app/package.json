@@ -9,12 +9,12 @@
   "author": "malyon",
   "license": "MIT",
   "dependencies": {
-    "compression": "^1.7.4",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.6",
     "express": "^4.19.2",
     "glob": "^10.3.10",
     "method-override": "^3.0.0",
-    "morgan": "^1.10.0",
+    "morgan": "^1.10.1",
     "sequelize": "^6.37.0",
     "serve-favicon": "^2.5.0",
     "sqlite3": "^5.1.7"
