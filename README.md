@@ -29,3 +29,13 @@ https://www.instructables.com/Get-Started-with-ESP8266-Using-AT-Commands-NodeMCU
 4. Implement better security for the IoT setup.
 5. Have the plants get watered automatically with solenoid valves and pumps?
 
+
+| Device State / Action          | Meaning to User                               | LED Behavior(BlinkPattern)             |
+| :---------------------------- | :------------------------------------------- | :--------------------------------------- |
+| Booting Up                 | Device just powered on                        | Solid ON for 3 seconds                    |
+| Awaiting Configuration      | Waiting for Wi-Fi credentials via Serial     | LED ON 500ms, OFF 2500ms (slow blink)    |
+| Connecting to Wi-Fi         | Trying to connect to saved Wi-Fi             | LED ON 100ms, OFF 400ms (fast blink)     |
+| Data Sent Successfully      | Moisture level sent to server                 | 1 quick blink (LED ON 100ms, OFF 100ms)  |
+| Send/Server Error           | Couldn’t connect or POST failed               | 3 quick blinks (LED ON/OFF 100ms)        |
+| Wi-Fi Failing Repeatedly    | Connection failing repeatedly                  | 5 quick blinks every 5 seconds           |
+
