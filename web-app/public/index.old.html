@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="En">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="css/plant_saturation.css" />
+    <!--Link Materialize-->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <!--Import Google Icon Font-->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <title>Plant Hydration Monitor</title>
+  </head>
+  <body>
+    <div id="head">
+      <h1>Bio::Neos Plant Monitor</h1>
+    </div>
+    <!--
+    Previos Bar Code for Pie Chart:
+  </div>
+    <div class="bar_container">
+      <div id="main_container">
+        <div id="pbar" class="progress-pie-chart" data-percent="0">
+          <div class="ppc-progress">
+            <div class="ppc-progress-fill"></div>
+          </div>
+          <div class="ppc-percents">
+            <div class="pcc-percents-wrapper">
+              <img src="img/transparent_leaves_1.png" alt="A pie chart with a plant in the middle.">
+            </div>
+          </div>
+        </div>
+        <progress style="display: none" id="progress_bar" value="0" max="100"></progress>
+      </div>
+    </div>
+    -->
+    <main>
+      <img
+        src="img/transparent_leaves_1.png"
+        alt="A pie chart with a plant in the middle."
+      />
+      <div class="rectangle"></div>
+      <script src="js/jquery-3.1.1.min.js"></script>
+      <script src="js/rainbowvis.js"></script>
+      <script src="js/plant_saturation.js"></script>
+      <div class="buttonContainer">
+        <button
+          class="btn waves-effect waves-light"
+          type="submit"
+          name="action"
+          id="addButton"
+        >
+          Add Device
+          <i class="material-icons right">computer</i>
+        </button>
+      </div>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    </main>
+    <footer>&copy; 2025 Bio::Neos LLC</footer>
+  </body>
+</html>
