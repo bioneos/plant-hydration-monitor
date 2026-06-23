@@ -354,14 +354,18 @@ void loop()
   ModuleConfig config;
   EEPROM.get(0, config);
 
-  // Open a basic HTTP connection to the server
-  Serial.printf("Attempted to report moisture value of '%i' to server at: %d.%d.%d.%d:%i\n",
-                moisture, config.server[0], config.server[1], config.server[2], config.server[3], SERVER_PORT);
-  if (client.connect(IPAddress(config.server[0], config.server[1], config.server[2], config.server[3]), SERVER_PORT))
+  // Rapid flash of the Onboard LED
   digitalWrite(ONBOARD_LED, LOW);
   delay(100);
   digitalWrite(ONBOARD_LED, HIGH);
   delay(100);
+
+  // Open a basic HTTP connection to the server
+  Serial.printf("Attempted to report moisture value of '%i' to server at: %d.%d.%d.%d:%i\n",
+                moisture, config.server[0], config.server[1], 
+                config.server[2], config.server[3], SERVER_PORT);
+  if (client.connect(IPAddress(config.server[0], config.server[1], 
+          config.server[2], config.server[3]), SERVER_PORT))
   {
     // Create our POST request message Body content with MAC address
     String postStr = "sensorVal=";
@@ -370,7 +374,8 @@ void loop()
     postStr += WiFi.macAddress();
 
     // Create host header with actual server IP
-    String hostHeader = String(config.server[0]) + "." + String(config.server[1]) + "." + String(config.server[2]) + "." + String(config.server[3]);
+    String hostHeader = String(config.server[0]) + "." + String(config.server[1]) + "." +
+      String(config.server[2]) + "." + String(config.server[3]);
 
     // Send our POST request
     client.print("POST /api/saturation HTTP/1.1\r\n");
