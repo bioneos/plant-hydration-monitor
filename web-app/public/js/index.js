@@ -18,6 +18,23 @@ const getMoistureStatus = (percentage) => {
   return 'Very Dry';
 };
 
+const alertedPlants = new Set();
+
+function showDryAlert(message) {
+  document.getElementById("dry-alert-message").textContent = message;
+  document.getElementById("dry-alert").show();
+}
+
+function closeDryAlert() {
+  document.getElementById("dry-alert").close();  
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("close-alert-btn")
+    .addEventListener("click", closeDryAlert);
+});
+
 function createPlantCard(plant, saturationData) {
   const template = document.getElementById('plant-card-template');
   const clone = template.content.cloneNode(true);
