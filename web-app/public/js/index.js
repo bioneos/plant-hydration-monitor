@@ -54,7 +54,7 @@ function createPlantCard(plant, saturationData) {
     progressBar.className = `bg-${moistureColor}-500 h-3 rounded-full transition-all duration-500 ease-in-out`;
     progressBar.style.width = `${moisturePercentage}%`;
   }
-
+  
   const cardElement = clone.querySelector('div');
   cardElement.dataset.plantId = plant.id; // Store plant ID for deletion
   cardElement.addEventListener('click', (e) => {
@@ -148,12 +148,14 @@ function closeRegisterPlantModal() {
   clearStatusMessage();
 
   // reset form
+
   const form = document.getElementById('register-plant-form');
   if (form) {
     form.reset();
   }
 
   detectedMacAddress = null;
+
 }
 
 function showStatusMessage(message, isError = false) {
