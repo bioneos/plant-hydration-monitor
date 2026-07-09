@@ -71,7 +71,16 @@ function createPlantCard(plant, saturationData) {
     progressBar.className = `bg-${moistureColor}-500 h-3 rounded-full transition-all duration-500 ease-in-out`;
     progressBar.style.width = `${moisturePercentage}%`;
   }
-  
+
+  if (moisturePercentage < 20) {
+    if (!alertedPlants.has(plant.id)) {
+      showDryAlert(plant.name + ' needs to be watered');
+      alertedPlants.add(plant.id);
+    }
+  } else {
+      alertedPlants.delete(plant.id);
+  }
+
   const cardElement = clone.querySelector('div');
   cardElement.dataset.plantId = plant.id; // Store plant ID for deletion
   cardElement.addEventListener('click', (e) => {
