@@ -1,5 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <EEPROM.h>
+#include <cmath>
 #define ONBOARD_LED 2
 
 // NOTE: Change these values to the WiFi values for your personal WiFi
@@ -17,6 +18,7 @@ const int SERVER_PORT = 3000;
 //   4) Sleep for SLEEP_MS
 const int NUM_READS = 10;
 const int READ_DELAY_MS = 100;
+
 // 5 minutes:
 // const int SLEEP_US = 5 * 60 * 1000000;
 // 15 seconds (useful when troubleshooting / in development):
@@ -75,7 +77,8 @@ bool availableConnectionInfo()
     return true;
 }
 
-/** * Parse a configuration string from the Serial interface, or return
+/** 
+ * Parse a configuration string from the Serial interface, or return
  * false if the proper format was not used. In the case of a failure,
  * a repeated command will succeed if the format is corrected.
  *
@@ -196,7 +199,7 @@ bool saveConfigData(int length)
 /**
  * Slow poll (3s) the Serial interface until a configuration is supplied.
  * Announce that we are awaiting a config on the serial interface every
- * 1 minute, while blinking the onboard LED every 3 seconds;
+ * 1 minute, while blinking the onboard LED every 3 seconds.
  */
 void awaitConfigFromSerial()
 {
@@ -239,6 +242,7 @@ void awaitConfigFromSerial()
  */
 void setup()
 {
+
   // Turn on serial communication for logging
   // TODO: when in production mode we will want to disable serial output to save energy
   Serial.begin(115200);
@@ -347,7 +351,9 @@ void loop()
   // TODO: Let's review the reasoning behind this smoothing, not sure I understand
   //   what we are doing here (or why). At a minimum we should get rid of the magic
   //   numbers so we can change the number of reads
-  int moisture = ((totSum / NUM_READS) / 900) * 100;
+
+  double averageOfReads = (static_cast<double>(totSum) / NUM_READS);
+  int moisture = std::round(averageOfReads);
   Serial.printf("Done: %i\n", moisture);
 
   // Get server configuration from EEPROM
@@ -375,7 +381,7 @@ void loop()
 
     // Create host header with actual server IP
     String hostHeader = String(config.server[0]) + "." + String(config.server[1]) + "." +
-      String(config.server[2]) + "." + String(config.server[3]);
+    String(config.server[2]) + "." + String(config.server[3]);
 
     // Send our POST request
     client.print("POST /api/saturation HTTP/1.1\r\n");

@@ -139,6 +139,18 @@ function openRegisterPlantModal() {
   clearStatusMessage();
   // load available serial devices
   refreshSerialDevices();
+
+  //Handle show password checkbox
+  const passwordInputField = document.getElementById("wifi-password");
+  const showPasswordCheckbox = document.getElementById("show-password-checkbox");
+  showPasswordCheckbox.addEventListener('change', function () {
+    if(this.checked) {
+      passwordInputField.type = "text";
+    }
+    else {
+      passwordInputField.type = "password";
+    }
+  })
 }
 
 function closeRegisterPlantModal() {

@@ -2,6 +2,7 @@ const express = require('express'),
   router = express.Router(),
   { SerialPort } = require('serialport'),
   { ReadlineParser } = require('@serialport/parser-readline');
+const os = require('os')
 
 module.exports = function (app) {
   app.use('/api', router);
@@ -25,18 +26,33 @@ router.post('/serial/configure', async (req, res) => {
       });
     }
 
-    // get server IP dynamically - avoid localhost
-    let serverIP = '192.168.1.100'; // default fallback
-    if (req.headers.host) {
-      const hostIP = req.headers.host.split(':')[0];
-      // only use if it's a valid IP address, not localhost or hostname
+    //Try to search network interfaces for LAN IP address, then try IP address in post header, then try finalFallback 
+    const networkInterfaces = os.networkInterfaces(); 
+    let serverIP = 
+        //look for IPv4 addresses in sub interfaces of common non-internal network interfaces 
+        networkInterfaces?.["wlan0"]?.find(subInterface => /^\d+\.\d+\.\d+\.\d+$/.test(subInterface.address)).address ||
+        networkInterfaces?.["Wi-Fi"]?.find(subInterface => /^\d+\.\d+\.\d+\.\d+$/.test(subInterface.address)).address ||
+        networkInterfaces?.["wlan1"]?.find(subInterface => /^\d+\.\d+\.\d+\.\d+$/.test(subInterface.address)).address ||
+        null;
+    if (!serverIP) {
+      const finalFallback = '192.168.1.100';
+      serverIP = finalFallback;
+
+      const hostIP = req?.headers?.host.split(':')[0];
+      console.log(`Couldn't find a LAN IP, using ${hostIP} as fallback`);
+
+      // only use hostIP if it's a valid IP address, not localhost or hostname
       // b/c we don't want to fail the validation happening on the esp
-      if (/^\d+\.\d+\.\d+\.\d+$/.test(hostIP)) {
+      if(
+        //regex testing null will return false
+        /^\d+\.\d+\.\d+\.\d+$/.test(hostIP) && 
+        !hostIP.equals('127.0.0.1')
+      ) 
+        {
         serverIP = hostIP;
-      } else {
-        console.log(
-          `Host ${hostIP} is not a valid IP, using default ${serverIP}`
-        );
+      } 
+      else {
+        console.log(`Host ${hostIP} is not a valid IP, using ${finalFallback} as fallback`);
       }
     }
 

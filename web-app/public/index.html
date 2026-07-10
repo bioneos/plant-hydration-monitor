@@ -205,7 +205,17 @@
               class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-zinc-700 dark:text-white"
               required
             />
-            <p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+            <div class="flex items-center">
+              <input 
+                type="checkbox"
+                id="show-password-checkbox"
+                class="mr-2 mt-2 rounded border-gray-400"
+              />
+              <p class="text-xs font-medium text-gray-700 dark:text-gray-400 mt-2">
+                Show password
+              </p>
+            </div>
+            <p class="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
               Password is transmitted in plain text over local network
             </p>
           </div>
