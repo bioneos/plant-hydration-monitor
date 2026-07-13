@@ -342,6 +342,29 @@
       </div>
     </div>
 
+    <!-- Alert for when plant gets very dry-->
+      <div class="fixed flex items-center justify-center z-50 flex-col">
+        <dialog 
+          id="dry-alert" 
+          class="rounded-lg shadow-lg p-6 w-96 border-none bg-gray-600" 
+          style="
+            position: fixed;
+            inset: 0;
+            margin: auto;
+          "
+        >  
+          <div class="text-center">
+            <h2 class="text-xl font-bold text-amber-600">
+              <span class="text-red-600">Warning:</span> Plant Needs Water
+            </h2>
+            <p id="dry-alert-message" class="mt-3 text-white"></p>
+            <button id="close-alert-btn" class="mt-3 px-4 py-2 items-center bg-blue-500 hover:bg-blue-600 text-white rounded cursor-pointer">
+              Close
+            </button>
+          </div>
+        </dialog>
+      </div>
+
     <script src="js/jquery-3.1.1.min.js"></script>
     <script src="js/index.js"></script>
   </body>

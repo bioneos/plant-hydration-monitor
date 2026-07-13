@@ -18,6 +18,23 @@ const getMoistureStatus = (percentage) => {
   return 'Very Dry';
 };
 
+const alertedPlants = new Set();
+
+function showDryAlert(message) {
+  document.getElementById("dry-alert-message").textContent = message;
+  document.getElementById("dry-alert").show();
+}
+
+function closeDryAlert() {
+  document.getElementById("dry-alert").close();  
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document
+    .getElementById("close-alert-btn")
+    .addEventListener("click", closeDryAlert);
+});
+
 function createPlantCard(plant, saturationData) {
   const template = document.getElementById('plant-card-template');
   const clone = template.content.cloneNode(true);
@@ -53,6 +70,15 @@ function createPlantCard(plant, saturationData) {
   } else {
     progressBar.className = `bg-${moistureColor}-500 h-3 rounded-full transition-all duration-500 ease-in-out`;
     progressBar.style.width = `${moisturePercentage}%`;
+  }
+
+  if (moisturePercentage < 20) {
+    if (!alertedPlants.has(plant.id)) {
+      showDryAlert(plant.name + ' needs to be watered');
+      alertedPlants.add(plant.id);
+    }
+  } else {
+      alertedPlants.delete(plant.id);
   }
 
   const cardElement = clone.querySelector('div');
@@ -160,12 +186,14 @@ function closeRegisterPlantModal() {
   clearStatusMessage();
 
   // reset form
+
   const form = document.getElementById('register-plant-form');
   if (form) {
     form.reset();
   }
 
   detectedMacAddress = null;
+
 }
 
 function showStatusMessage(message, isError = false) {
