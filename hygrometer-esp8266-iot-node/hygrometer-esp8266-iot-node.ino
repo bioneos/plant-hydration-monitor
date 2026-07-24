@@ -4,9 +4,11 @@
 #include <DHT11.h>
 
 #define ONBOARD_LED 2
+#define DHT11_PIN 2
 
 // Humidity Sensor pin setup
-DHT11 dht11(2);
+// Note: The humidity sensor should still be wired to digital pin 4 on the ESP8266 despite giving the library config for digital pin 2 
+DHT11 dht11(DHT11_PIN);
 
 // NOTE: Change these values to the WiFi values for your personal WiFi
 // char SSID[] =  ""; // Your current WiFi network SSID (can be hidden)
@@ -18,11 +20,14 @@ const int SERVER_PORT = 3000;
 
 // Main loop process:
 //   1) Wake from sleep
-//   2) Read from the sensor NUM_READS times, READ_DELAY_APART second apart
-//   3) Average readings for a value and POST back to the server
-//   4) Sleep for SLEEP_MS
+//   2) Read from the moisture sensor NUM_READS times, READ_DELAY_APART seconds apart
+//   3) Read from the humidity sensor HUMIDITY_FAIL_NUM_READS times, HUMIDITY_FAIL_READ_DELAY_MS seconds apart
+//   4) Average readings for a value and POST back to the server
+//   5) Sleep for SLEEP_MS
 const int NUM_READS = 10;
 const int READ_DELAY_MS = 100;
+const int HUMIDITY_FAIL_READ_DELAY_MS = 200;
+const int HUMIDITY_FAIL_NUM_READS = 3;
 
 // 5 minutes:
 // const int SLEEP_US = 5 * 60 * 1000000;
@@ -368,16 +373,12 @@ void loop()
   // Return of zero means successful
   int humiditySensorResult = dht11.readTemperatureHumidity(temperature, humidity);
 
-  // Try 10 more times to read humidity sensor data if initial read fails 
-  int iteration = 0;
-  int humidityFailReadDelay = 200; // TODO: should this be global variable 
-  while(humiditySensorResult != 0 && iteration < 10) {
-    Serial.printf("Humidity Sensor failed, trying again... %i");
+  // Try HUMIDITY_FAIL_NUM_READS more times to read humidity sensor data if initial read fails 
+  for(int i = 0; i < HUMIDITY_FAIL_NUM_READS && humiditySensorResult != 0; i++) {
+    Serial.printf("Humidity Sensor failed, trying again...");
     humiditySensorResult = dht11.readTemperatureHumidity(temperature, humidity);
 
-    delay(humidityFailReadDelay);
-
-    iteration++;
+    delay(HUMIDITY_FAIL_READ_DELAY_MS);
   }
 
   Serial.printf("Done. Moisture: %i\nTemperature: %i\nHumidity: %i", moisture, temperature, humidity);
