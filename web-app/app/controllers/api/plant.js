@@ -89,7 +89,7 @@ router.get('/plant/:plant_id', async function (req, res, next) {
 /**
  * Update a plant's details i.e.e name, location, MAC
  * @return
- *  Single Object with properties [id, name, mac, location, created_at, updated_at]
+ *  Single Object with properties [id, name, MAC, location, created_at, updated_at]
  */
 router.put('/plant/:plant_id', async (req, res, next) => {
   const { name, location, MAC } = req.body;
