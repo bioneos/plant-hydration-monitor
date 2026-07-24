@@ -367,6 +367,9 @@ void loop()
   int moisture = std::round(averageOfReads);
 
   // Humidity sensor
+
+  Serial.println("Starting humidity measurement...");
+  // -300 is a flag for failure of humidity sensor read
   int temperature = -300;
   int humidity = -300;
 
@@ -394,8 +397,8 @@ void loop()
   delay(100);
 
   // Open a basic HTTP connection to the server
-  Serial.printf("\nAttempted to report moisture value of '%i' to server at: %d.%d.%d.%d:%i\n",
-                moisture, config.server[0], config.server[1], 
+  Serial.printf("\nAttempted to report moisture value of '%i', humidity value of '%i', and temperature value of '%i' to server at: %d.%d.%d.%d:%i\n",
+                moisture, humidity, temperature, config.server[0], config.server[1], 
                 config.server[2], config.server[3], SERVER_PORT);
   if (client.connect(IPAddress(config.server[0], config.server[1], 
           config.server[2], config.server[3]), SERVER_PORT))
