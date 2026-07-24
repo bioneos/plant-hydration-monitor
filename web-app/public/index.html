@@ -74,7 +74,15 @@
                 </div>
               </div>
             </div>
-            <div class="flex justify-end">
+            
+            <div class="justify-end flex gap-2">
+              <button
+                class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-500 transition duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50 cursor-pointer"
+                data-field="open-edit-modal-btn"
+                onclick="openEditPlantModal(this)"
+              >
+                Edit Plant
+              </button>
               <button
                 class="bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-50 cursor-pointer"
                 data-field="delete-btn"
@@ -233,6 +241,190 @@
               id="configure-btn"
             >
               Register Plant
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  <!-- edit plant modal -->
+  <div
+      id="edit-plant-modal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      "
+    >
+      <div
+        class="bg-white dark:bg-zinc-800 rounded-lg shadow-lg p-6 w-11/12 max-w-md max-h-[90vh] overflow-y-auto"
+      >
+        <h2 
+        class="text-xl font-semibold mb-4" 
+        id="edit-plant-modal-header">
+          <span 
+          id="edit-plant-modal-header-span" 
+          class="text-green-600 dark:text-green-400"
+          ></span>
+        </h2>
+        <form id="edit-plant-form">
+          <input
+            id="edit-hidden-plant-id"
+            type="hidden"
+            name="plantId"
+            value=""
+          />
+          <div class="mb-4">
+            <label
+              for="plant-name"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Plant Name</label
+            >
+            <input
+              type="text"
+              id="edit-plant-name"
+              name="plant-name"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-zinc-700 dark:text-white"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label
+              for="plant-location"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Location</label
+            >
+            <input
+              type="text"
+              id="edit-plant-location"
+              name="plant-location"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-zinc-700 dark:text-white"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label
+              for="serial-device"
+              class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >Device</label
+            >
+            <div class="flex gap-2">
+              <select
+                id="edit-serial-device"
+                name="serial-device"
+                class="flex-1 min-w-0 px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-zinc-700 dark:text-white"
+                required
+              >
+                <option value="">
+                  <!-- Current Device: *MAC ADDRESS* -->
+                </option>
+              </select>
+              <button
+                type="button"
+                id="edit-refresh-devices"
+                class="flex-shrink-0 p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 transition duration-200 flex items-center justify-center w-10 h-10 cursor-pointer"
+                onclick="refreshEditSerialDevices()"
+              >
+                <svg
+                  class="w-5 h-5"
+                  fill="white"
+                  viewBox="0 0 50 50"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M25 38c-7.2 0-13-5.8-13-13 0-3.2 1.2-6.2 3.3-8.6l1.5 1.3C15 19.7 14 22.3 14 25c0 6.1 4.9 11 11 11 1.6 0 3.1-.3 4.6-1l.8 1.8c-1.7.8-3.5 1.2-5.4 1.2z"
+                  />
+                  <path
+                    d="M34.7 33.7l-1.5-1.3c1.8-2 2.8-4.6 2.8-7.3 0-6.1-4.9-11-11-11-1.6 0-3.1.3-4.6 1l-.8-1.8c1.7-.8 3.5-1.2 5.4-1.2 7.2 0 13 5.8 13 13 0 3.1-1.2 6.2-3.3 8.6z"
+                  />
+                  <path d="M18 24h-2v-6h-6v-2h8z" />
+                  <path d="M40 34h-8v-8h2v6h6z" />
+                </svg>
+              </button>
+            </div>
+            <div class="mb-2">
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Connect your Arduino/ESP8266 device via USB and click refresh
+              </p>
+            </div>
+            <div id="config-new-device-div">
+              <div 
+                class="flex"
+                >
+                <div class="w-[20%]"></div>
+                <div class="w-full">
+                  <label
+                    for="wifi-ssid"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                    >WiFi SSID</label
+                  >
+                  <input
+                    type="text"
+                    id="edit-wifi-ssid"
+                    name="wifi-ssid"
+                    class=" w-full px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-zinc-700 dark:text-white"
+                  />
+                  <div class="mb-4">
+                    <label
+                      for="wifi-password"
+                      class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                      >WiFi Password</label
+                    >
+                    <input
+                      type="password"
+                      id="edit-wifi-password"
+                      name="wifi-password"
+                      autocomplete="current-password"
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-zinc-700 dark:text-white"
+                    />
+                    <div class="flex items-center">
+                      <input 
+                        type="checkbox"
+                        id="edit-show-password-checkbox"
+                        class="mr-2 mt-2 rounded border-gray-400"
+                      />
+                      <p class="text-xs font-medium text-gray-700 dark:text-gray-400 mt-1">
+                        Show password
+                      </p>
+                    </div>
+                    <p class="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                      Password is transmitted in plain text over local network
+                    </p>
+                  </div>  
+                </div>
+              </div>
+              <div class="flex items-center" id="new-serial-confirmation-div">            
+                <input 
+                    type="checkbox"
+                    id="new-serial-device-confirmation-checkbox"
+                    name="confirmation-checkbox"
+                    class="mr-2 mt-2 rounded border-gray-400"
+                />
+                <p class="text-xs font-medium text-red-600 dark:text-red-400 mt-2">
+                    Are you sure you want to rebind the plant data to a new serial device? (This will require you to configure a new device)
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-between items-center">
+            <button
+              type="button"
+              class="bg-gray-300 dark:bg-zinc-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-zinc-600 hover:shadow-lg transition duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50 mr-2 cursor-pointer"
+              onclick="closeEditPlantModal()"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 hover:shadow-lg transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 cursor-pointer"
+              id="edit-plant-btn"
+            >
+              Edit Plant
             </button>
           </div>
         </form>
