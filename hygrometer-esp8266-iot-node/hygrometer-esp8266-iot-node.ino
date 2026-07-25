@@ -22,7 +22,7 @@ const int SERVER_PORT = 3000;
 //   1) Wake from sleep
 //   2) Read from the moisture sensor NUM_READS times, READ_DELAY_APART seconds apart
 //   3) Read from the humidity sensor HUMIDITY_FAIL_NUM_READS times, HUMIDITY_FAIL_READ_DELAY_MS seconds apart
-//   4) Average readings for a value and POST back to the server
+//   4) Average readings from moisture sensor and POST to the server with moisture value, humidity value, and temperature value
 //   5) Sleep for SLEEP_MS
 const int NUM_READS = 10;
 const int READ_DELAY_MS = 100;
