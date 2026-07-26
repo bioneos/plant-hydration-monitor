@@ -1,3 +1,5 @@
+const data = require('../../models/data');
+
 const express = require('express'),
   router = express.Router(),
   db = require('./../../models');
@@ -9,20 +11,23 @@ module.exports = function (app) {
 /**
  * Return all saturation values for a single plant.
  * @return
- *  object with the object arrays moisture, humidity, and temperature.
- *    moisture: [
- *      { plant_id, moisture, created_at, updated_at }
- *    ], 
- *    humidity: [
- *      { plant_id, humidity, created_at, updated_at }
- *    ], 
- *    temperature: [
- *      { plant_id, temperature, created_at, updated_at }
- *    ]
+ *    object with plantId and object array data.
+ *      {
+ *        plantId,
+ *        data: [
+ *          {
+ *            createdAt,
+ *            moisture,
+ *            humidity,
+ *            temperature
+ *          },
+ *          ... 
+ *        ]
+ *      }
  */
 router.get('/saturation/:plant_id', async function (req, res, next) {
   // TODO: Handle a bad request more robustly
-  const moistureResult = await db.Moisture.findAll({
+  const dbResult = await db.Data.findAll({
     where: { plantId: req.params.plant_id },
   });
 
@@ -30,37 +35,56 @@ router.get('/saturation/:plant_id', async function (req, res, next) {
   // we are returning that there are no moisture values for this plant
   // but the plant might not exist at all
 
-  let moistureValues = [];
-  moistureResult.forEach((obj) => {
-    moistureValues.push(obj.toJSON());
+  let dbValues = [];
+  dbResult.forEach((obj) => {
+    dbValues.push(obj.toJSON());
   });
-  // moisture values are necessary
-  if (moistureValues.length === 0) {
+
+  if (dbValues.length === 0) {
     return res
       .status(404)
-      .json({ error: 'No moisture values found for this plant' });
+      .json({ error: 'No data found for this plant' });
   }
   
-  const humidityResult = await db.Humidity.findAll({
-    where: { plantId: req.params.plant_id },
-  });
-  let humidityValues = [];
-  humidityResult.forEach((obj) => {
-    humidityValues.push(obj.toJSON());
-  });
-  
-  const temperatureResult = await db.Temperature.findAll({
-    where: { plantId: req.params.plant_id }
-  });
-  let temperatureValues = [];
-  temperatureResult.forEach((obj) => {
-    temperatureValues.push(obj.toJSON());
-  });
-  
+  /** dbValues looks like this:
+   * [
+   *    {
+   *      plantId,
+   *      createdAt,
+   *      moisture,
+   *      humidity,
+   *      temperature
+   *    },
+   *    ...
+   * ]
+   * We don't need the plantId in every object so we return this:
+   *       {
+   *        plantId,
+   *        data: [
+   *          {
+   *            createdAt,
+   *            moisture,
+   *            humidity,
+   *            temperature
+   *          },
+   *          ... 
+   *        ]
+   *      }
+   *  */  
+
+  let dataValues = [];
+  dbValues.forEach(obj => {
+    dataValues.push({
+      createdAt: obj.createdAt,
+      moisture: obj.moisture,
+      humidity: obj.humidity,
+      temperature: obj.temperature
+    });
+  }); 
+
   const response = {
-    moisture: moistureValues,
-    humidity: humidityValues,
-    temperature: temperatureResult
+    plantId: req.params.plant_id, 
+    data: dataValues
   }
 
   res.json(response);
@@ -69,44 +93,30 @@ router.get('/saturation/:plant_id', async function (req, res, next) {
 /**
  * Return the most recent recorded saturation
  * @return
- *    object with objects moisture, humidity, temperature 
+ *    object with properties plantId, createdAt, moisture, humidity, temperature 
  *      {
- *        moisture: { plant_id, moisture, created_at, updated_at },
- *        humidity: { plant_id, humidity, created_at, updated_at },
- *        temperature { plant_id, temperature, created_at, updated_at }
+ *        plantId,
+ *        createdAt,
+ *        moisture,
+ *        humidity,
+ *        temperature
  *      }
  */
 router.get('/saturation/:plant_id/last', async function (req, res, next) {
   // TODO: Handle a bad request more robustly
-  const moistureInstance = await db.Moisture.findOne({
+  const dataInstance = await db.Data.findOne({
     where: { plantId: req.params.plant_id },
     order: [['createdAt', 'DESC']],
   });
 
-  // moisture instance is necessary
-  if (!moistureInstance) {
+  // data instance is necessary
+  if (!dataInstance) {
     return res
       .status(404)
-      .json({ error: 'No moisture values found for this plant' });
+      .json({ error: 'No data found for this plant' });
   }
-
-  const humidityInstance = await db.Humidity.findOne({
-      where: { plantId: req.params.plant_id },
-      order: [['createdAt', 'DESC']],
-  });
   
-  const temperatureInstance = await db.Temperature.findOne({
-      where: { plantId: req.params.plant_id },
-      order: [['createdAt', 'DESC']],
-  });
-
-  const response = {
-    moisture: moistureInstance,
-    humidity: humidityInstance,
-    temperature: temperatureInstance
-  }
-
-  res.json(response);
+  res.json(dataInstance);
 });
 
 /**
@@ -125,7 +135,7 @@ router.post('/saturation', async function (req, res, next) {
   console.log('Received temperature value: ', temperatureValue);
   console.log('From MAC Address:', macAddress);
 
-  // Humidity and temperature are not required. They can be null in the database
+  // Humidity and temperature are not required, those properties can be null.
   if (!moistureValue) {
     return res.status(400).json({ error: 'sensorVal is required' });
   }
@@ -155,51 +165,14 @@ router.post('/saturation', async function (req, res, next) {
       });
   }
 
-  // Moisture, humidity, and temperature tables will all have the same amount of rows. We make sure they all have the same createdAt value for their respective rows
-  const currentTime = new Date();
-
-  // Create new Moisture, Humidity, and Temperature instances and save them to database
-  const moisture = await db.Moisture.create({
+  // Create data instance
+  const dataInstance = await db.Data.create({
     plantId: plant.id,
     moisture: moistureValue,
-    createdAt: currentTime
-  });
-  console.log(`New moisture instance with value: ${moisture.moisture} from ${moisture.createdAt}`);
-
-  const humidity = await db.Humidity.create({
-    plantId: plant.id,
     humidity: humidityPercentValue,
-    createdAt: currentTime
+    temperature: temperatureValue  
   });
-  console.log(`New humidity instance with value: ${humidity.humidity} from ${humidity.createdAt}`);
-
-  const temperature = await db.Temperature.create({
-    plantId: plant.id,
-    temperature: temperatureValue,
-    createdAt: currentTime
-  });
-  console.log(`New temperature instance with value: ${temperature.temperature} from ${temperature.createdAt}`);
-
-  /**
-   * noisy. lists all moisture, humidity and temperature values from db
-   */
-  // const allMoistureVals = await plant.getMoisture();
-  // console.log("List of moisture values from every instance: ");
-  // for (let n = 0; n < allMoistureVals.length; n++) {
-  //   console.log(`${n}: ${allMoistureVals[n].moisture} from ${allMoistureVals[n].createdAt}`);
-  // }
-
-  // const allHumidityVals = await plant.getHumidity();
-  // console.log("List of humidity values from every instance: ");
-  // for (let n = 0; n < allHumidityVals.length; n++) {
-  //   console.log(`${n}: ${allHumidityVals[n].humidity} from ${allHumidityVals[n].createdAt}`);
-  // }
-
-  // const allTemperatureVals = await plant.getTemperature();
-  // console.log("List of temperature values from every instance: ");
-  // for (let n = 0; n < allTemperatureVals.length; n++) {
-  //   console.log(`${n}: ${allTemperatureVals[n].temperature} from ${allTemperatureVals[n].createdAt}`);
-  // }
+  console.log("Successfully created new data row with moisture:", dataInstance.moisture, "humidity:", dataInstance.humidity, "and temperature:", dataInstance.temperature, "from", dataInstance.createdAt.toLocaleString());
 
   res.json({
     message: 'SUCCESS',

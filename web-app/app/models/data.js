@@ -3,9 +3,9 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Moisture extends Model {
+  class Data extends Model {
     static associate(models) {
-      Moisture.belongsTo(models.Plant, {
+      Data.belongsTo(models.Plant, {
         foreignKey: "plantId",
         as: 'plant',
         onDelete: 'cascade',
@@ -14,12 +14,16 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
   }
-  Moisture.init({
+  Data.init({
     id: {type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false},
-    moisture: { type: DataTypes.INTEGER, allowNull: false }
+    moisture: { type: DataTypes.INTEGER, allowNull: false },
+    humidity: { type: DataTypes.INTEGER, allowNull: true },
+    temperature: { type: DataTypes.INTEGER, allowNull: true }
   }, {
     sequelize,
-    modelName: 'Moisture',
+    modelName: 'Data',
+    createdAt: true,
+    updatedAt: false
   });
-  return Moisture;
+  return Data;
 };

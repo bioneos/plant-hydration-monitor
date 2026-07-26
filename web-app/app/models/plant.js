@@ -5,17 +5,9 @@ const {
 module.exports = (sequelize, DataTypes) => {
   class Plant extends Model {
     static associate(models) {
-      Plant.hasMany(models.Moisture, { 
+      Plant.hasMany(models.Data, { 
         foreignKey: "plantId",
-        as: 'moisture',
-      });
-      Plant.hasMany(models.Temperature, { 
-        foreignKey: "plantId",
-        as: 'temperature',
-      });
-      Plant.hasMany(models.Humidity, { 
-        foreignKey: "plantId",
-        as: 'humidity',
+        as: 'data',
       });
     }
   }
