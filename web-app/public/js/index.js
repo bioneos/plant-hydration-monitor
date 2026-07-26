@@ -18,24 +18,24 @@ const getMoistureStatus = (percentage) => {
   return 'Very Dry';
 };
 
-function createPlantCard(plant, saturationData) {
+function createPlantCard(plant, data) {
   const template = document.getElementById('plant-card-template');
   const clone = template.content.cloneNode(true);
 
-  // Handle case where there's no saturation data yet
+  // Handle case where there's no moisture data yet
   let moisturePercentage, moistureColor, moistureStatus;
 
   if (
-    !saturationData ||
-    saturationData.moisture === undefined ||
-    saturationData.moisture === null
+    !data.moisture ||
+    data.moisture === undefined ||
+    data.moisture === null
   ) {
     // No data available yet
     moisturePercentage = 0;
     moistureColor = 'gray';
     moistureStatus = 'No Data';
   } else {
-    const moistureLevel = saturationData.moisture;
+    const moistureLevel = data.moisture;
     moisturePercentage = Math.round(((1023 - moistureLevel) / 1023) * 100);
     moistureColor = getMoistureColor(moisturePercentage);
     moistureStatus = getMoistureStatus(moisturePercentage);
@@ -105,10 +105,11 @@ const fetchPlants = async () => {
     cardContainer.innerHTML = '';
     plants.forEach((plant, index) => {
       const saturationResult = saturationResults[index];
-      const moistureData =
-        saturationResult.status === 'fulfilled' ? saturationResult.value.moisture : null;
+      console.log(saturationResult);
+      const data =
+        saturationResult.status === 'fulfilled' ? saturationResult.value : null;
 
-      const cardElement = createPlantCard(plant, moistureData);
+      const cardElement = createPlantCard(plant, data);
       cardContainer.appendChild(cardElement);
     });
   } catch (error) {

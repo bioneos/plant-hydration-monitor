@@ -52,9 +52,9 @@ class PlantDetailView {
   }
 
   updatePlantInfo(plant, latestSaturation) {
-    const moistureData = latestSaturation.moisture;
-    const humidityData = latestSaturation.humidity;
-    const temperatureData = latestSaturation.temperature;
+    const moisture = latestSaturation.moisture;
+    const humidity = latestSaturation.humidity;
+    const temperature = latestSaturation.temperature;
 
     document.getElementById('plant-name').textContent =
       plant.name || 'Plant Details';
@@ -63,9 +63,9 @@ class PlantDetailView {
     document.getElementById('plant-mac').textContent = plant.MAC || 'Unknown';
 
 
-    if (moistureData) {
+    if (moisture) {
       const moisturePercentage = Math.round(
-        ((1023 - moistureData.moisture) / 1023) * 100
+        ((1023 - moisture) / 1023) * 100
       );
       document.getElementById('current-moisture').textContent =
         moisturePercentage;
@@ -77,7 +77,7 @@ class PlantDetailView {
         moisturePercentage
       )}`;
 
-      const lastUpdated = new Date(moistureData.createdAt);
+      const lastUpdated = new Date(latestSaturation.createdAt);
       document.getElementById('last-updated').textContent =
         lastUpdated.toLocaleString();
     } else {
@@ -86,8 +86,8 @@ class PlantDetailView {
       document.getElementById('last-updated').textContent = 'Never';
     }
     
-    if (humidityData.humidity != null) {
-      const humidityPercentage = humidityData.humidity;
+    if (humidity != null) {
+      const humidityPercentage = humidity;
       document.getElementById('current-humidity').textContent =
         humidityPercentage
 
@@ -103,13 +103,14 @@ class PlantDetailView {
       document.getElementById('humidity-status').textContent = 'No Data';
     }
 
-    if (temperatureData.temperature != null) {
+    if (temperature != null) {
       // Lower temperatures are blue, higher temperatures are red
-      const temperaturePercentage = Math.round((1 - temperatureData.temperature / 37.8) * 100);
+      const maxTemperature= 37.8;
+      const temperaturePercentage = Math.round((1 - temperature / maxTemperature) * 100);
       document.getElementById('current-temperature').textContent =
-        temperatureData.temperature;
+        temperature;
 
-      const status = this.getTemperatureFarenheit(temperatureData.temperature)  + "°F";
+      const status = this.getTemperatureFarenheit(temperature)  + "°F";
       const statusElement = document.getElementById('temperature-status');
       statusElement.textContent = status;
       statusElement.className = `mt-2 text-sm font-medium ${this.getStatusColor(
@@ -135,8 +136,8 @@ class PlantDetailView {
         console.warn('No saturation data found');
       }
 
-      this.createMoistureChart(allSaturationData.moisture);
-      this.populateReadingsTable(allSaturationData);
+      this.createMoistureChart(allSaturationData.data);
+      this.populateReadingsTable(allSaturationData.data);
     } catch (error) {
       console.error('Error loading chart data:', error);
     }
@@ -243,14 +244,11 @@ class PlantDetailView {
   }
 
   populateReadingsTable(readings) {
-    const moistureReadings = readings.moisture;
-    const humidityReadings = readings.humidity;
-    const temperatureReadings = readings.temperature;
 
     const tbody = document.getElementById('readings-table');
     tbody.innerHTML = '';
 
-    if (!moistureReadings || moistureReadings.length === 0) {
+    if (!readings || readings.length === 0) {
       tbody.innerHTML = `
         <tr>
           <td colspan="4" class="px-6 py-4 text-center text-gray-500">
@@ -263,13 +261,13 @@ class PlantDetailView {
 
     // There are the same amount of temperature and humidity readings as moisture readings 
     // Iterate backwards to display newest readings first
-    for(let i = moistureReadings.length - 1; i >= 0; i--) {
-      const moistureReading = moistureReadings[i];
-      const humidityReading = humidityReadings[i];
-      const temperatureReading = temperatureReadings[i];
+    for(let i = readings.length - 1; i >= 0; i--) {
+      const moisture = readings[i].moisture;
+      const humidity = readings[i].humidity;
+      const temperature = readings[i].temperature;
 
       const moisturePercentage = Math.round(
-        ((1023 - moistureReading.moisture) / 1023) * 100
+        ((1023 - moisture) / 1023) * 100
       );
       const status = this.getMoistureStatus(moisturePercentage);
       const statusColor = this.getStatusColor(moisturePercentage);
@@ -277,19 +275,19 @@ class PlantDetailView {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-          ${new Date(moistureReading.createdAt).toLocaleString()}
+          ${new Date(readings[i].createdAt).toLocaleString()}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-          ${moistureReading.moisture}
+          ${moisture}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
           ${moisturePercentage}%
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-          ${humidityReading.humidity == null ? "No Data" : humidityReading.humidity + "%"}
+          ${humidity == null ? "No Data" : humidity + "%"}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-          ${temperatureReading.temperature == null ? "No Data" : temperatureReading.temperature + "°C"}
+          ${temperature == null ? "No Data" : temperature + "°C"}
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
           <span class="text-sm font-medium ${statusColor}">${status}</span>
@@ -357,10 +355,10 @@ class PlantDetailView {
         throw new Error('Failed to fetch saturation data', response.statusText);
       }
 
-      const allSaturationData = await response.json();
-
+      const readings = await response.json();
+      console.log(readings);
       if (this.moistureChart) {
-        const chartData = allSaturationData.moisture.map((reading) => ({
+        const chartData = readings.data.map((reading) => ({
           x: new Date(reading.createdAt),
           y: Math.round(((1023 - reading.moisture) / 1023) * 100),
         }));
@@ -369,7 +367,7 @@ class PlantDetailView {
         this.moistureChart.update('none'); // no animation
       }
 
-      this.populateReadingsTable(allSaturationData);
+      this.populateReadingsTable(readings);
 
       console.log('Plant data refreshed successfully');
     } catch (error) {
