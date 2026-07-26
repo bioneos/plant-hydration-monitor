@@ -277,3 +277,8 @@ function closeEditPlantModal() {
 
   detectedMacAddress = null;
 }
+
+window.openEditPlantModal = openEditPlantModal;
+window.refreshEditSerialDevices = refreshEditSerialDevices;
+window.updatePlantInfo = updatePlantInfo;
+window.closeEditPlantModal = closeEditPlantModal;

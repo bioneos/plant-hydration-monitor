@@ -257,3 +257,8 @@ async function updateBindings() {
   });
   showStatusMessage(updatedPlantsStr);
 }
+
+window.openPlantBindingsModal = openPlantBindingsModal;
+window.unbindedDivDragover = unbindedDivDragover;
+window.unbindedDivDrop = unbindedDivDrop;
+window.updateBindings = updateBindings;

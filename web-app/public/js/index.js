@@ -364,11 +364,3 @@ function getPlantCardFromChild(childElement) {
   }
   return plantCard;
 }
-
-window.openRegisterPlantModal = openRegisterPlantModal;
-window.closeRegisterPlantModal = closeRegisterPlantModal;
-window.refreshSerialDevices = refreshSerialDevices;
-window.openDeletePlantModal = openDeletePlantModal;
-window.closeDeletePlantModal = closeDeletePlantModal;
-window.refreshDeleteSerialDevices = refreshDeleteSerialDevices;
-window.confirmDeletePlant = confirmDeletePlant;

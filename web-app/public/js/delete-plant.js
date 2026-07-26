@@ -211,3 +211,8 @@ function closeDeletePlantModal() {
     .classList.add('hidden');
   currentPlantToDelete = null;
 }
+
+window.openDeletePlantModal = openDeletePlantModal;
+window.closeDeletePlantModal = closeDeletePlantModal;
+window.refreshDeleteSerialDevices = refreshDeleteSerialDevices;
+window.confirmDeletePlant = confirmDeletePlant;

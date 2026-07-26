@@ -122,3 +122,7 @@ function closeRegisterPlantModal() {
 
   detectedMacAddress = null;
 }
+
+window.openRegisterPlantModal = openRegisterPlantModal;
+window.closeRegisterPlantModal = closeRegisterPlantModal;
+window.refreshSerialDevices = refreshSerialDevices;

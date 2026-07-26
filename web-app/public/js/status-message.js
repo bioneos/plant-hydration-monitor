@@ -30,3 +30,6 @@ function clearStatusMessage() {
     existingMessage.remove();
   }
 }
+
+window.showStatusMessage = showStatusMessage;
+window.clearStatusMessage = clearStatusMessage;
