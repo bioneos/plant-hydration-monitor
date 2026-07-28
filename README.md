@@ -153,10 +153,9 @@ The node script ./web-app/app.js starts up an express web application that liste
 * The Plant table has the columns: plantId, name, location, MAC, createdAt, and updatedAt
 * The Data table has the columns: plantId, moisture, humidity, temperature, and createdAt
 
+## Web Application Frontend
+The web app frontend, located in ./web-app/public allows users to register plants to the database, configure devices, edit plants in the database, delete plants in the database, and view specific plant's details.
 
-## Testing the module
-Testing the ESP8266 modules from hiletgo can be done through the serial monitor (BEFORE you flash them) using these instructions:
-https://www.instructables.com/Get-Started-with-ESP8266-Using-AT-Commands-NodeMCU/
 
 ## Future Roadmap
 1. Implement better security for the IoT setup.
