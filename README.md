@@ -148,6 +148,11 @@ The node script ./web-app/app.js starts up an express web application that liste
 * Handled in ./web-app/controllers/api/plant.js
 * Deletes the plant in the database whose plantId property is plant_id
 
+## Database
+* We use sequelize. We have two tables: Plant and Data. Rows in the Data table have the foriegn key plantId which binds them to whichever row in the Plant table has the key plantId. Each row in the plant table has a unique plantId, but multiple rows in the Data table can have the same plantId. Each row in the Data table is essentially one POST request from the esp8266.
+* The Plant table has the columns: plantId, name, location, MAC, createdAt, and updatedAt
+* The Data table has the columns: plantId, moisture, humidity, temperature, and createdAt
+
 
 ## Testing the module
 Testing the ESP8266 modules from hiletgo can be done through the serial monitor (BEFORE you flash them) using these instructions:
