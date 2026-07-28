@@ -1,9 +1,10 @@
 # Plant Hydration Monitor
 
-Split up into three parts, the Plant Hydration Monitor has:
-1. Data Acquisition
-2. An interfacing layer
-3. A webapp
+Split up into three parts, the Plant Hydration Monitor Project has:
+1. Data acquisition
+2. A server
+3. A database
+4. A web app frontend user-interface
 
 ## Data Acquisition
 Located in ./hygrometer-reading/hygrometer-reading.ino, the data acquisition layer is written for an arduino with a hygrometer connected to get the moisture level of the soil. The Arduino reads in the value and sends the data over the serial port to the computer that is powering the Arduino and running the Interfacing Layer.  The easiest way to get this flashed onto an Arduino is to use the Arduino IDE.  More details regarding the schematics and hardware information to come soon.
