@@ -7,13 +7,8 @@ Split up into three parts, the Plant Hydration Monitor Project has:
 4. A web app frontend user-interface
 
 ## Data Acquisition
-Located in ./hygrometer-reading/hygrometer-reading.ino, the data acquisition layer is written for an arduino with a hygrometer connected to get the moisture level of the soil. The Arduino reads in the value and sends the data over the serial port to the computer that is powering the Arduino and running the Interfacing Layer.  The easiest way to get this flashed onto an Arduino is to use the Arduino IDE.  More details regarding the schematics and hardware information to come soon.
+Data is acquired through the ./hygrometer-esp8266-io-node/hygrometer-esp8266-iot-node.ino file. When this script is downloaded onto an esp8266, the esp will enter our configuration mode in which it waits to receive a String over serial with the following example format: SSID:Peter's iPhone|PASS:password|SERVER:192.168.1.100 Once the esp recieves this configuration String, the esp will do a very basic validation of the Wi-Fi SSID, Wi-Fi password, and server IP. If the esp recieved a valid configuration String, the esp will come out of configuration mode and connect to the network it was given in the configuration String. Once connected to the network, the esp will be put into a loop of making HTTP POST requests to the server that has the IP address the esp recieved in the configuration String. The POST requests' bodies will contain the following properties: sensorVal, humidityPercentVal, temperatureVal, and macAddress. The property sensorVal is the raw voltage on the analog output pin (determined by the capacitive moisture sensor) which is an integer ranging from 0-1024. The properties humidityPercentVal and temperatureVal are determined by the DHT11 arduino library which takes the raw information it recieves on Digital Pin 4 and turns it into a humidity percent and a temperature in celsius. The property macAddress is the MAC address of the esp. 
 
-## Interfacing Layer
-This Node application, located in ./plant-hydration-interface, reads in the serial data coming in from the Data Acquisition script over a configurable serialport and sends the data with an http post request to the web application portion.  Right now it assumes the web app is running at localhost:3000.  This should be updated so that the url and port are configurable.
-
-## Web Application
-The web application portion, located in ./web-app is a very simple application at this point.  It stores one value that is posted to the correct url from the interfacing layer and displays that to the web page.  Obviously this setup will only work for one sensor.
 
 ## Testing the module
 Testing the ESP8266 modules from hiletgo can be done through the serial monitor (BEFORE you flash them) using these instructions:
