@@ -154,7 +154,7 @@ The node script ./web-app/app.js starts up an express web application that liste
 * The Data table has the columns: plantId, moisture, humidity, temperature, and createdAt
 
 ## Web Application Frontend
-The web app frontend, located in ./web-app/public allows users to register plants to the database, configure devices, edit plants in the database, delete plants in the database, and view specific plant's details.
+The web app frontend, located in ./web-app/public allows users to register plants to the database, configure esp8266s, edit plants in the database, delete plants in the database, and view specific plant's details.
 
 
 ## Future Roadmap
