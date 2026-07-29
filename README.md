@@ -156,6 +156,23 @@ The node script ./web-app/app.js starts up an express web application that liste
 ## Web Application Frontend
 The web app frontend, located in ./web-app/public allows users to register plants to the database, configure esp8266s, edit plants in the database, delete plants in the database, and view specific plant's details.
 
+### Register Plant Monitor Feature
+This feature allows users to register a new plant monitor using and html form. All fields in the form are required. On submit, the form will do a redundant check to make sure all form fields are filled out and then send a configuration String to the esp8266 on the COM the user selected. If the esp8266 successfully configures, a POST request to sent to http://serverip:3000/api/plants with the form info.
+
+### Edit Plant Feature
+This feature allows users to change the name, and location properties of a plant in the database. If the user whishes to change the MAC address property of a plant in the database, they will have to register a new esp8266 that hasn't yet been configured. On open, the edit plant modal sends a GET Request to get the plant that is being edited from the database. While the request is pending, the edit plant modal form will be uneditable. On submit, the form sends a PUT request to the server with the plant's new name, location, and MAC properties.
+
+### Delete Plant Feature
+This feature allows users to delete a plant from the database and optionally clear the EEPROM of an esp8266 connected to a COM on the machine hosting the server. 
+
+### Status Message
+This is a global object that other features use. There is only one status message object. The object has the follow properties:
+* bindedDiv: determines which div the status message is displayed on
+* okStyling: determines the tailwind classes the status message will have  
+
+Helper functions: 
+* showStatusMessage: clears the previous status message and displays a new status message in statusMessage.bindedDiv
+* clearStatusMessage: clears the current status message on the page
 
 ## Future Roadmap
 1. Implement better security for the IoT setup.
