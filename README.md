@@ -174,10 +174,7 @@ Helper functions:
 * showStatusMessage: clears the previous status message and displays a new status message in statusMessage.bindedDiv
 * clearStatusMessage: clears the current status message on the page
 
-## Future Roadmap
-1. Implement better security for the IoT setup.
-2. Have the plants get watered automatically with solenoid valves and pumps?
-
+## ESP8266 LED 
 
 | Device State / Action          | Meaning to User                               | LED Behavior(BlinkPattern)             |
 | :---------------------------- | :------------------------------------------- | :--------------------------------------- |
@@ -188,3 +185,6 @@ Helper functions:
 | Send/Server Error           | Couldn’t connect or POST failed               | 3 quick blinks (LED ON/OFF 100ms)        |
 | Wi-Fi Failing Repeatedly    | Connection failing repeatedly                  | 5 quick blinks every 5 seconds           |
 
+## Future Roadmap
+1. Implement better security for the IoT setup.
+2. Have the plants get watered automatically with solenoid valves and pumps?
