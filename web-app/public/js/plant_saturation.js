@@ -6,8 +6,8 @@ $(document).ready(function () {
 
   const loading = function () {
     $.get('api/saturation/1/last', function (data) {
-      console.log(data);
-      value = data.moisture; // Changed from data.value to data.moisture
+      console.log(data.moisture);
+      value = data.moisture;
       let decimal = (1023 - value) / 1023;
       // const decimal = value / 1023;
       const percent = decimal * 100;

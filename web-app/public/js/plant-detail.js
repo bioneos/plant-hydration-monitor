@@ -51,16 +51,21 @@ class PlantDetailView {
     }
   }
 
-  updatePlantInfo(plant, saturation) {
+  updatePlantInfo(plant, latestSaturation) {
+    const moisture = latestSaturation.moisture;
+    const humidity = latestSaturation.humidity;
+    const temperature = latestSaturation.temperature;
+
     document.getElementById('plant-name').textContent =
       plant.name || 'Plant Details';
     document.getElementById('plant-location').textContent =
       plant.location || 'Not specified';
     document.getElementById('plant-mac').textContent = plant.MAC || 'Unknown';
 
-    if (saturation) {
+
+    if (moisture) {
       const moisturePercentage = Math.round(
-        ((1023 - saturation.moisture) / 1023) * 100
+        ((1023 - moisture) / 1023) * 100
       );
       document.getElementById('current-moisture').textContent =
         moisturePercentage;
@@ -72,7 +77,7 @@ class PlantDetailView {
         moisturePercentage
       )}`;
 
-      const lastUpdated = new Date(saturation.createdAt);
+      const lastUpdated = new Date(latestSaturation.createdAt);
       document.getElementById('last-updated').textContent =
         lastUpdated.toLocaleString();
     } else {
@@ -80,23 +85,59 @@ class PlantDetailView {
       document.getElementById('moisture-status').textContent = 'No Data';
       document.getElementById('last-updated').textContent = 'Never';
     }
+    
+    if (humidity != null) {
+      const humidityPercentage = humidity;
+      document.getElementById('current-humidity').textContent =
+        humidityPercentage
+
+      const status = this.getHumidityStatus(humidityPercentage);
+      const statusElement = document.getElementById('humidity-status');
+      statusElement.textContent = status;
+      statusElement.className = `mt-2 text-sm font-medium ${this.getStatusColor(
+        humidityPercentage
+      )}`;
+
+    } else {
+      document.getElementById('current-humidity').textContent = '--';
+      document.getElementById('humidity-status').textContent = 'No Data';
+    }
+
+    if (temperature != null) {
+      // Lower temperatures are blue, higher temperatures are red
+      const maxTemperature= 37.8;
+      const temperaturePercentage = Math.round((1 - temperature / maxTemperature) * 100);
+      document.getElementById('current-temperature').textContent =
+        temperature;
+
+      const status = this.getTemperatureFarenheit(temperature)  + "°F";
+      const statusElement = document.getElementById('temperature-status');
+      statusElement.textContent = status;
+      statusElement.className = `mt-2 text-sm font-medium ${this.getStatusColor(
+        temperaturePercentage
+      )}`;
+
+    } else {
+      document.getElementById('current-temperature').textContent = '--';
+      document.getElementById('temperature-status').textContent = 'No Data';
+    }
   }
 
   async loadChartData() {
     try {
       // load all saturation data for this plant
       const response = await fetch(`/api/saturation/${this.plantId}`);
-      let data = [];
+      let allSaturationData;
 
       if (response.ok) {
-        data = await response.json();
-        console.log('Loaded saturation data:', data);
+        allSaturationData = await response.json();
+        console.log('Loaded saturation data:', allSaturationData);
       } else {
         console.warn('No saturation data found');
       }
 
-      this.createMoistureChart(data);
-      this.populateReadingsTable([...data].reverse()); // reverse to show latest first
+      this.createMoistureChart(allSaturationData.data);
+      this.populateReadingsTable(allSaturationData.data);
     } catch (error) {
       console.error('Error loading chart data:', error);
     }
@@ -203,6 +244,7 @@ class PlantDetailView {
   }
 
   populateReadingsTable(readings) {
+
     const tbody = document.getElementById('readings-table');
     tbody.innerHTML = '';
 
@@ -217,9 +259,15 @@ class PlantDetailView {
       return;
     }
 
-    readings.forEach((reading) => {
+    // There are the same amount of temperature and humidity readings as moisture readings 
+    // Iterate backwards to display newest readings first
+    for(let i = readings.length - 1; i >= 0; i--) {
+      const moisture = readings[i].moisture;
+      const humidity = readings[i].humidity;
+      const temperature = readings[i].temperature;
+
       const moisturePercentage = Math.round(
-        ((1023 - reading.moisture) / 1023) * 100
+        ((1023 - moisture) / 1023) * 100
       );
       const status = this.getMoistureStatus(moisturePercentage);
       const statusColor = this.getStatusColor(moisturePercentage);
@@ -227,13 +275,19 @@ class PlantDetailView {
       const row = document.createElement('tr');
       row.innerHTML = `
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-          ${new Date(reading.createdAt).toLocaleString()}
+          ${new Date(readings[i].createdAt).toLocaleString()}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-          ${reading.moisture}
+          ${moisture}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
           ${moisturePercentage}%
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+          ${humidity == null ? "No Data" : humidity + "%"}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+          ${temperature == null ? "No Data" : temperature + "°C"}
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
           <span class="text-sm font-medium ${statusColor}">${status}</span>
@@ -244,7 +298,7 @@ class PlantDetailView {
         'hover:bg-gray-50 hover:shadow-md dark:hover:shadow-zinc-600 dark:hover:bg-zinc-700 transition duration-200 ease-in';
 
       tbody.appendChild(row);
-    });
+    };
   }
 
   getMoistureStatus(percentage) {
@@ -253,6 +307,16 @@ class PlantDetailView {
     if (percentage >= 40) return 'Moderate';
     if (percentage >= 20) return 'Low Moisture';
     return 'Very Dry';
+  }
+  getHumidityStatus(percentage) {
+    if (percentage >= 80) return 'Very Humid';
+    if (percentage >= 60) return 'Quite Humid';
+    if (percentage >= 40) return 'Moderately Humid';
+    if (percentage >= 20) return 'Low Humidity';
+    return 'Very Dry';
+  }
+  getTemperatureFarenheit(temperatureCelsius) {
+    return Math.round((temperatureCelsius * 1.8) + 32);
   }
 
   getStatusColor(percentage) {
@@ -291,10 +355,10 @@ class PlantDetailView {
         throw new Error('Failed to fetch saturation data', response.statusText);
       }
 
-      const data = await response.json();
-
+      const readings = await response.json();
+      console.log(readings);
       if (this.moistureChart) {
-        const chartData = data.map((reading) => ({
+        const chartData = readings.data.map((reading) => ({
           x: new Date(reading.createdAt),
           y: Math.round(((1023 - reading.moisture) / 1023) * 100),
         }));
@@ -303,7 +367,7 @@ class PlantDetailView {
         this.moistureChart.update('none'); // no animation
       }
 
-      this.populateReadingsTable([...data].reverse()); // reverse to show latest first
+      this.populateReadingsTable(readings);
 
       console.log('Plant data refreshed successfully');
     } catch (error) {

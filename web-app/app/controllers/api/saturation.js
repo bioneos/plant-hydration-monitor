@@ -1,3 +1,5 @@
+const data = require('../../models/data');
+
 const express = require('express'),
   router = express.Router(),
   db = require('./../../models');
@@ -9,12 +11,23 @@ module.exports = function (app) {
 /**
  * Return all saturation values for a single plant.
  * @return
- *   Array of objects with properties [plant_id, moisture, created_at, updated_at]
+ *    object with plantId and object array data.
+ *      {
+ *        plantId,
+ *        data: [
+ *          {
+ *            createdAt,
+ *            moisture,
+ *            humidity,
+ *            temperature
+ *          },
+ *          ... 
+ *        ]
+ *      }
  */
 router.get('/saturation/:plant_id', async function (req, res, next) {
-  console.log('here');
   // TODO: Handle a bad request more robustly
-  const result = await db.Moisture.findAll({
+  const dbResult = await db.Data.findAll({
     where: { plantId: req.params.plant_id },
   });
 
@@ -22,58 +35,119 @@ router.get('/saturation/:plant_id', async function (req, res, next) {
   // we are returning that there are no moisture values for this plant
   // but the plant might not exist at all
 
-  let moistureValues = [];
-  result.forEach((obj) => {
-    moistureValues.push(obj.toJSON());
+  let dbValues = [];
+  dbResult.forEach((obj) => {
+    dbValues.push(obj.toJSON());
   });
 
-  if (moistureValues.length === 0) {
+  if (dbValues.length === 0) {
     return res
       .status(404)
-      .json({ error: 'No moisture values found for this plant' });
+      .json({ error: 'No data found for this plant' });
+  }
+  
+  /** dbValues looks like this:
+   * [
+   *    {
+   *      plantId,
+   *      createdAt,
+   *      moisture,
+   *      humidity,
+   *      temperature
+   *    },
+   *    ...
+   * ]
+   * We don't need the plantId in every object so we return this:
+   *       {
+   *        plantId,
+   *        data: [
+   *          {
+   *            createdAt,
+   *            moisture,
+   *            humidity,
+   *            temperature
+   *          },
+   *          ... 
+   *        ]
+   *      }
+   *  */  
+
+  let dataValues = [];
+  dbValues.forEach(obj => {
+    dataValues.push({
+      createdAt: obj.createdAt,
+      moisture: obj.moisture,
+      humidity: obj.humidity,
+      temperature: obj.temperature
+    });
+  }); 
+
+  const response = {
+    plantId: req.params.plant_id, 
+    data: dataValues
   }
 
-  console.log(moistureValues);
-  res.json(moistureValues);
+  res.json(response);
 });
 
 /**
  * Return the most recent recorded saturation
  * @return
- *   Single Object with properties [plant_id, moisture, created_at, updated_at]
+ *    object with properties plantId, createdAt, moisture, humidity, temperature 
+ *      {
+ *        plantId,
+ *        createdAt,
+ *        moisture,
+ *        humidity,
+ *        temperature
+ *      }
  */
 router.get('/saturation/:plant_id/last', async function (req, res, next) {
   // TODO: Handle a bad request more robustly
-  const moistureValues = await db.Moisture.findOne({
+  const dataInstance = await db.Data.findOne({
     where: { plantId: req.params.plant_id },
     order: [['createdAt', 'DESC']],
   });
 
-  if (!moistureValues) {
+  // data instance is necessary
+  if (!dataInstance) {
     return res
       .status(404)
-      .json({ error: 'No moisture values found for this plant' });
+      .json({ error: 'No data found for this plant' });
   }
-
-  res.json(moistureValues);
+  
+  res.json(dataInstance);
 });
 
 /**
- * Create a new saturation value for a plant.
+ * Create new moisture, humidity, and temperature values for a plant.
  */
 router.post('/saturation', async function (req, res, next) {
-  const saturation = req.body.sensorVal;
+  
   const macAddress = req.body.macAddress;
 
-  console.log('Received Saturation Value:', saturation);
+  const moistureValue = req.body.sensorVal;
+  const humidityPercentValue = req.body.humidityPercentVal || null;
+  const temperatureValue = req.body.temperatureVal || null;
+
+  console.log('Received Saturation Value:', moistureValue);
+  console.log('Received Humidity value: ', humidityPercentValue);
+  console.log('Received temperature value: ', temperatureValue);
   console.log('From MAC Address:', macAddress);
 
-  if (!saturation) {
+  // Humidity and temperature are not required, those properties can be null.
+  if (!moistureValue) {
     return res.status(400).json({ error: 'sensorVal is required' });
   }
 
   if (!macAddress) {
     return res.status(400).json({ error: 'macAddress is required' });
+  }
+  if(!temperatureValue) {
+    console.log("No temperature value");
+  }
+  if(!humidityPercentValue) {
+    console.log("No humidity value");
   }
 
   // Get our target plant (based on MAC address of POST request)
@@ -91,17 +165,14 @@ router.post('/saturation', async function (req, res, next) {
       });
   }
 
-  // Create a new Moisture Value
-  const moisture = await db.Moisture.create({
+  // Create data instance
+  const dataInstance = await db.Data.create({
     plantId: plant.id,
-    moisture: saturation,
+    moisture: moistureValue,
+    humidity: humidityPercentValue,
+    temperature: temperatureValue  
   });
-  await moisture.save();
-
-  const newVals = await plant.getMoisture();
-  for (let n = 0; n < newVals.length; n++) {
-    console.log(`${n}: ${newVals[n].moisture} from ${newVals[n].createdAt}`);
-  }
+  console.log("Successfully created new data row with moisture:", dataInstance.moisture, "humidity:", dataInstance.humidity, "and temperature:", dataInstance.temperature, "from", dataInstance.createdAt.toLocaleString());
 
   res.json({
     message: 'SUCCESS',
